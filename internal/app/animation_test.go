@@ -27,7 +27,7 @@ func TestAllBarsShowEveryPercent(t *testing.T) {
 
 func TestPetBodyAnimatesForEveryStage(t *testing.T) {
 	for _, stage := range []string{"egg", "baby", "child", "teen", "adult"} {
-		for _, kind := range []string{"food", "sleep", "wash", "change"} {
+		for _, kind := range []string{"food", "sleep", "wash", "brush"} {
 			pet := *newDefaultTamagotchi("Test")
 			pet.Stage = stage
 			// Compare actual anatomy, excluding captions and decorative effects.
@@ -59,9 +59,10 @@ func TestAnimationVisibleAtTerminalCells(t *testing.T) {
 	}
 	defer screen.Fini()
 	screen.SetSize(80, 24)
-	for _, kind := range []string{"food", "sleep", "wash", "change"} {
+	for _, kind := range []string{"food", "sleep", "wash", "brush"} {
 		a := testApp(t)
 		a.currentTamagotchi.Stage = "adult"
+
 		if kind == "food" {
 			a.startFeeding(0)
 		} else {
@@ -102,7 +103,7 @@ func TestDeadPetDoesNotAnimate(t *testing.T) {
 	pet := *newDefaultTamagotchi("Test")
 	pet.IsAlive = false
 	pet.Health = 0
-	for _, kind := range []string{"food", "sleep", "wash", "change"} {
+	for _, kind := range []string{"food", "sleep", "wash", "brush"} {
 		if renderActionSprite(pet, kind, 0, 0) != renderTamagotchiSprite(pet) {
 			t.Fatalf("dead pet animated for %s", kind)
 		}

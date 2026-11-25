@@ -3,12 +3,14 @@ package app
 import "time"
 
 type Tamagotchi struct {
+	Species      string
 	HealthyTicks int
 	Cleanliness  int
-	Diaper       int
+	GroomTicks   int
+	Grooming     int
 	CareTicks    int
 	LastWash     time.Time
-	LastChange   time.Time
+	LastBrush    time.Time
 	Name         string
 	Age          int
 	Hunger       int

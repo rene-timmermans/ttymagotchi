@@ -34,7 +34,8 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 	// Basic info
 	listStatus.AddItem(fmt.Sprintf("Name: %s", t.Name), "", 0, nil)
 	listStatus.AddItem(fmt.Sprintf("Age: %d days", t.Age), "", 0, nil)
-	listStatus.AddItem(fmt.Sprintf("Stage: %s", t.Stage), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf("Stage: %s", stageLabel(t)), "", 0, nil)
+	listStatus.AddItem("Species: "+speciesLabel(t), "", 0, nil)
 	listStatus.AddItem(fmt.Sprintf("Weight: %.1f grams", t.Weight), "", 0, nil)
 
 	// Stats with visual bars
@@ -81,9 +82,9 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 	}
 	listStatus.AddItem(fmt.Sprintf("Energy: %s %s", energyColor, energyBar), "", 0, nil)
 
-	listStatus.AddItem("Hygiene: "+a.createProgressBar(min(t.Cleanliness, t.Diaper), 100), "", 0, nil)
+	listStatus.AddItem("Hygiene: "+a.createProgressBar(hygieneLevel(t), 100), "", 0, nil)
 	listStatus.AddItem(fmt.Sprintf("Cleanliness: %s", a.createProgressBar(t.Cleanliness, 100)), "", 0, nil)
-	listStatus.AddItem(fmt.Sprintf("Fresh diaper: %s", a.createProgressBar(t.Diaper, 100)), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf("Brushing: %s", a.createProgressBar(t.Grooming, 100)), "", 0, nil)
 
 	listStatus.AddItem(a.recoveryStatus(t), "", 0, nil)
 
@@ -113,7 +114,20 @@ func (a *App) updateSpriteView(view *tview.TextView) {
 		return
 	}
 
-	view.SetText(renderTamagotchiSprite(t))
+	if knownSpecies(t.Species) && growthIndex(t.Stage) > 0 {
+		view.SetText(strings.Join(animalPose(t, "idle", int(time.Now().UnixMilli()/400)), "\n"))
+	} else if growthIndex(t.Stage) == 0 && t.IsAlive {
+		frame := int(time.Now().UnixMilli() / 400)
+		pose := eggPose(t, "idle", frame)
+		if frame%2 == 1 {
+			for i := range pose {
+				pose[i] = " " + pose[i]
+			}
+		}
+		view.SetText(strings.Join(pose, "\n"))
+	} else {
+		view.SetText(renderTamagotchiSprite(t))
+	}
 }
 
 func (a *App) createProgressBar(current, max int) string {
@@ -161,7 +175,7 @@ func (a *App) statusPage() (title string, content tview.Primitive) {
 
 	layout := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
-		AddItem(listStatus, 0, 2, true).
+		AddItem(listStatus, 0, 1, true).
 		AddItem(a.spriteView, 0, 1, false)
 
 	title = statusSection
@@ -169,6 +183,12 @@ func (a *App) statusPage() (title string, content tview.Primitive) {
 }
 
 func renderTamagotchiSprite(t Tamagotchi) string {
+	if growthIndex(t.Stage) == 0 {
+		return strings.Join(eggPose(t, "idle", 0), "\n")
+	}
+	if knownSpecies(t.Species) {
+		return strings.Join(animalPose(t, "idle", 0), "\n")
+	}
 	mood := spriteMood(t.Happiness, t.Health, t.Energy, t.IsAlive)
 	stage := t.Stage
 	if stage == "" {

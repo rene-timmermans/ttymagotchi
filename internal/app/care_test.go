@@ -101,7 +101,7 @@ func TestHygieneDamageGradient(t *testing.T) {
 		pet := a.currentTamagotchi
 		pet.Hunger = 0
 		pet.Cleanliness = value
-		pet.Diaper = 100
+		pet.Grooming = 100
 		a.advanceTime(a.updateInterval)
 		if pet.Health != 100-want {
 			t.Fatalf("hygiene %d health=%d", value, pet.Health)
@@ -110,7 +110,7 @@ func TestHygieneDamageGradient(t *testing.T) {
 	a := testApp(t)
 	pet := a.currentTamagotchi
 	pet.Cleanliness = 0
-	pet.Diaper = 0
+	pet.Grooming = 0
 	pet.Hunger = 0
 	pet.Health = 10
 	a.advanceTime(a.updateInterval)
@@ -124,13 +124,13 @@ func TestCareAnimationAndSingleCommit(t *testing.T) {
 		kind    string
 		index   int
 		visible string
-	}{{"wash", 0, "Washing"}, {"change", 0, "diaper"}, {"sleep", 0, "Sleeping"}, {"sleep", 1, "Sleeping"}, {"sleep", 2, "Sleeping"}, {"sleep", 3, "Sleeping"}}
+	}{{"wash", 0, "Washing"}, {"brush", 0, "Brushing"}, {"sleep", 0, "Sleeping"}, {"sleep", 1, "Sleeping"}, {"sleep", 2, "Sleeping"}, {"sleep", 3, "Sleeping"}}
 	for _, tc := range cases {
 		for _, skip := range []bool{false, true} {
 			a := testApp(t)
 			pet := a.currentTamagotchi
 			pet.Cleanliness = 0
-			pet.Diaper = 0
+			pet.Grooming = 0
 			pet.Energy = 0
 			pet.Health = 50
 			before := *pet
@@ -155,11 +155,11 @@ func TestCareAnimationAndSingleCommit(t *testing.T) {
 			}
 			switch tc.kind {
 			case "wash":
-				if pet.Cleanliness != 100 || pet.Diaper != 0 || pet.Health != 50 || pet.LastWash.IsZero() {
+				if pet.Cleanliness != 100 || pet.Grooming != 0 || pet.Health != 50 || pet.LastWash.IsZero() {
 					t.Fatal("wrong bath effect")
 				}
-			case "change":
-				if pet.Cleanliness != 0 || pet.Diaper != 100 || pet.LastChange.IsZero() {
+			case "brush":
+				if pet.Cleanliness != 0 || pet.Grooming != 100 || pet.LastBrush.IsZero() {
 					t.Fatal("wrong change effect")
 				}
 			case "sleep":
@@ -182,9 +182,13 @@ func TestSleepEyesClosedForAllStages(t *testing.T) {
 		pet := *newDefaultTamagotchi("Test")
 		pet.Stage = stage
 		pet.Happiness = 100
-		sprite := strings.Join(actionPose(pet, "sleep", 0), "\n")
-		if strings.Contains(sprite, "^") || strings.Contains(sprite, "o o") || strings.Contains(sprite, "o   o") {
-			t.Fatalf("eyes open for %s: %s", stage, sprite)
+		pose := actionPose(pet, "sleep", 0)
+		faceRow := 5
+		if stage != "egg" {
+			faceRow = animalModel(pet).faceRow
+		}
+		if strings.Contains(pose[faceRow], "^") || strings.Contains(pose[faceRow], "o") {
+			t.Fatalf("eyes open for %s", stage)
 		}
 	}
 }
@@ -194,11 +198,11 @@ func TestCareStopsDamageAndOfflineUsesSpeed(t *testing.T) {
 	pet := a.currentTamagotchi
 	pet.Hunger = 0
 	pet.Cleanliness = 0
-	pet.Diaper = 0
+	pet.Grooming = 0
 	a.startCare("wash", 0)
 	a.finishCare()
 	a.closeActivity()
-	a.startCare("change", 0)
+	a.startCare("brush", 0)
 	a.finishCare()
 	a.closeActivity()
 	health := pet.Health

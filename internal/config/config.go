@@ -22,12 +22,14 @@ type AppConfig struct {
 }
 
 type TamagotchiConfig struct {
+	Species      string    `yaml:"species"`
 	HealthyTicks int       `yaml:"healthy_ticks"`
 	Cleanliness  int       `yaml:"cleanliness"`
-	Diaper       int       `yaml:"diaper"`
+	GroomTicks   int       `yaml:"groom_ticks"`
+	Grooming     int       `yaml:"grooming"`
 	CareTicks    int       `yaml:"care_ticks"`
 	LastWash     time.Time `yaml:"last_wash"`
-	LastChange   time.Time `yaml:"last_change"`
+	LastBrush    time.Time `yaml:"last_brush"`
 	Name         string    `yaml:"name"`
 	Age          int       `yaml:"age"`
 	Hunger       int       `yaml:"hunger"`    // 0-100, 0 = full, 100 = starving
@@ -35,7 +37,7 @@ type TamagotchiConfig struct {
 	Health       int       `yaml:"health"`    // 0-100, 0 = dead, 100 = healthy
 	Energy       int       `yaml:"energy"`    // 0-100, 0 = tired, 100 = energetic
 	Weight       float64   `yaml:"weight"`    // in grams
-	Stage        string    `yaml:"stage"`     // egg, baby, child, teen, adult
+	Stage        string    `yaml:"stage"`     // ten stages from egg through adult
 	Created      time.Time `yaml:"created"`
 	LastFed      time.Time `yaml:"last_fed"`
 	LastPlay     time.Time `yaml:"last_play"`
@@ -63,7 +65,7 @@ func LoadConfig() (*Config, error) {
 			SaveDirectory: appConfigDir,
 		},
 		Tamagotchi: TamagotchiConfig{
-			Cleanliness: 100, Diaper: 100,
+			Cleanliness: 100, Grooming: 100,
 			Name:      "Tammy",
 			Age:       0,
 			Hunger:    50,
@@ -91,10 +93,11 @@ func LoadConfig() (*Config, error) {
 		}
 	}
 
+	cfg.Tamagotchi.GroomTicks = max(0, min(20, cfg.Tamagotchi.GroomTicks))
 	cfg.Tamagotchi.HealthyTicks = max(0, min(4, cfg.Tamagotchi.HealthyTicks))
 	cfg.App.SpeedPercent = max(0, min(100, cfg.App.SpeedPercent))
 	cfg.Tamagotchi.Cleanliness = max(0, min(100, cfg.Tamagotchi.Cleanliness))
-	cfg.Tamagotchi.Diaper = max(0, min(100, cfg.Tamagotchi.Diaper))
+	cfg.Tamagotchi.Grooming = max(0, min(100, cfg.Tamagotchi.Grooming))
 	if cfg.Tamagotchi.Health <= 0 {
 		cfg.Tamagotchi.Health = 0
 		cfg.Tamagotchi.IsAlive = false

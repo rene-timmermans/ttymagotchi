@@ -29,20 +29,21 @@ func (a *App) generateHygieneList(list *tview.List) {
 	}
 	list.AddItem("=== HYGIENE ===", "", 0, nil)
 	list.AddItem("Wash — a bubbly bath", "", 0, func() { a.startCare("wash", 0) })
-	list.AddItem("Change diaper — fresh and comfortable", "", 0, func() { a.startCare("change", 0) })
+	list.AddItem("Brushing — care for fur and feathers", "", 0, func() { a.startCare("brush", 0) })
 	list.AddItem("", "", 0, nil)
-	list.AddItem("Hygiene: "+a.createProgressBar(min(t.Cleanliness, t.Diaper), 100), "", 0, nil)
+	list.AddItem("Hygiene: "+a.createProgressBar(hygieneLevel(t), 100), "", 0, nil)
 	list.AddItem("Cleanliness: "+a.createProgressBar(t.Cleanliness, 100), "", 0, nil)
-	list.AddItem("Fresh diaper: "+a.createProgressBar(t.Diaper, 100), "", 0, nil)
+	list.AddItem("Brushing: "+a.createProgressBar(t.Grooming, 100), "", 0, nil)
 	list.AddItem(fmt.Sprintf("Health: %d/100", t.Health), "", 0, nil)
 	list.AddItem("", "", 0, nil)
 	list.AddItem("At 20% or below, neglected hygiene damages health.", "", 0, nil)
-	list.AddItem("Closer to 0% = more damage. Both needs count independently.", "", 0, nil)
-	list.AddItem("Wash restores cleanliness; changing restores the diaper.", "", 0, nil)
+	list.AddItem("Closer to 0% = more damage. Each active need counts independently.", "", 0, nil)
+	list.AddItem("Brushing declines very slowly: 100 → 0 in ~7 days at 50% speed.", "", 0, nil)
+	list.AddItem("Baths restore cleanliness; Brushing restores coat care.", "", 0, nil)
 	for _, action := range []struct {
 		name string
 		at   time.Time
-	}{{"Last bath", t.LastWash}, {"Last change", t.LastChange}} {
+	}{{"Last bath", t.LastWash}, {"Last brushing", t.LastBrush}} {
 		when := "Not yet"
 		if !action.at.IsZero() {
 			when = action.at.Format("02 Jan 15:04")
@@ -58,7 +59,7 @@ func (a *App) hygienePage() (string, tview.Primitive) {
 	return hygieneSection, list
 }
 
-func isCare(kind string) bool { return kind == "sleep" || kind == "wash" || kind == "change" }
+func isCare(kind string) bool { return kind == "sleep" || kind == "wash" || kind == "brush" }
 
 func (a *App) startCare(kind string, index int) {
 	if !isCare(kind) || a.activity != nil || a.modal != nil {
@@ -105,9 +106,10 @@ func (a *App) finishCare() {
 			t.LastWash = time.Now()
 			g.message = fmt.Sprintf("Squeaky clean! Cleanliness %d → 100", before.Cleanliness)
 		} else {
-			t.Diaper = 100
-			t.LastChange = time.Now()
-			g.message = fmt.Sprintf("Fresh diaper! Freshness %d → 100", before.Diaper)
+			t.Grooming = 100
+			t.LastBrush = time.Now()
+			t.GroomTicks = 0
+			g.message = fmt.Sprintf("Freshly brushed! Brushing %d → 100", before.Grooming)
 		}
 		a.resetRecoveryIfNeededLocked()
 		// Hygiene stops neglect damage; washing alone does not heal existing illness.

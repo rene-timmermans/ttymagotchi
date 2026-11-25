@@ -259,9 +259,9 @@ func (a *App) renderActivity(now time.Time) {
 		case "wash":
 			title = "A bubbly bath"
 			body = "Washing away the dirt..."
-		case "change":
-			title = "A fresh diaper"
-			body = "Changing the diaper..."
+		case "brush":
+			title = "Brushing"
+			body = "Brushing fur and feathers..."
 		}
 	} else if g.kind == "food" {
 		title = availableFoods[g.index].Name
@@ -338,15 +338,10 @@ func (a *App) renderActivity(now time.Time) {
 	if g.phase == "result" {
 		sprite = renderTamagotchiSprite(t)
 		body = "[green]All done![-]\n\n" + tview.Escape(g.message)
-		if g.kind == "food" && t.IsAlive && strings.Contains(g.message, "Overfed") {
-			t.Happiness = 0
-			sprite = renderTamagotchiSprite(t)
-		}
-		if g.kind == "food" && t.IsAlive && !strings.Contains(g.message, "Overfed") {
-			t.Happiness = 100
-			sprite = renderTamagotchiSprite(t)
-		}
 		hint = "Enter: menu • Esc: Status • Ctrl+C: quit"
 	}
-	g.view.SetText("\n[::b]" + title + "[::-]\n" + sprite + "\n" + body + "\n\n[gray]" + hint + "[-]")
+	if g.kind != "food" && !isCare(g.kind) {
+		body = strings.ReplaceAll(body, "\n\n", "\n")
+	}
+	g.view.SetText("[::b]" + title + "[::-]\n" + sprite + "\n" + body + "\n[gray]" + hint + "[-]")
 }

@@ -102,8 +102,9 @@ func (a *App) initializeStateFromConfig() {
 	} else {
 		cfg := a.Config.Tamagotchi
 		a.currentTamagotchi = &Tamagotchi{
+			Species:      cfg.Species,
 			HealthyTicks: cfg.HealthyTicks,
-			Cleanliness:  cfg.Cleanliness, Diaper: cfg.Diaper, CareTicks: cfg.CareTicks, LastWash: cfg.LastWash, LastChange: cfg.LastChange,
+			Cleanliness:  cfg.Cleanliness, Grooming: cfg.Grooming, GroomTicks: cfg.GroomTicks, CareTicks: cfg.CareTicks, LastWash: cfg.LastWash, LastBrush: cfg.LastBrush,
 			Name:      cfg.Name,
 			Age:       cfg.Age,
 			Hunger:    cfg.Hunger,
@@ -120,6 +121,9 @@ func (a *App) initializeStateFromConfig() {
 		}
 	}
 
+	if !knownSpecies(a.currentTamagotchi.Species) {
+		a.currentTamagotchi.Species = randomSpecies()
+	}
 	a.timeAccumulator = maxDuration(0, minDuration(a.updateInterval-1, a.Config.App.TickRemainder))
 	a.checkDeathLocked()
 	a.applyOfflineProgress()
@@ -256,23 +260,27 @@ func (a *App) applyTickLocked() {
 
 	t := a.currentTamagotchi
 
+	t.Age = max(0, int(time.Since(t.Created).Hours())/24)
+	a.updateStageLocked(t.Stage)
 	t.Hunger = min(100, t.Hunger+1)
 	t.Energy = max(0, t.Energy-1)
 	t.CareTicks = (t.CareTicks + 1) % 6
 	if t.CareTicks%3 == 0 {
 		t.Cleanliness = max(0, t.Cleanliness-1)
 	}
-	if t.CareTicks%2 == 0 {
-		t.Diaper = max(0, t.Diaper-1)
+	t.GroomTicks = (t.GroomTicks + 1) % 21
+	if t.GroomTicks == 0 {
+		t.Grooming = max(0, t.Grooming-1)
 	}
-	if t.Hunger >= 80 {
+	if t.Hunger >= 80 || t.Cleanliness <= 20 || t.Grooming <= 20 || t.Energy < 20 {
 		t.Happiness = max(0, t.Happiness-1)
 	}
 	damage := 0
 	if t.Hunger >= 90 {
 		damage += 2
 	}
-	damage += hygieneDamage(t.Cleanliness) + hygieneDamage(t.Diaper)
+	damage += hygieneDamage(t.Cleanliness)
+	damage += hygieneDamage(t.Grooming)
 	t.Health = max(0, t.Health-damage)
 	a.checkDeathLocked()
 	if !t.IsAlive {
@@ -280,15 +288,6 @@ func (a *App) applyTickLocked() {
 	}
 
 	a.applyRecoveryLocked()
-
-	ageInHours := int(time.Since(t.Created).Hours())
-	if ageInHours < 0 {
-		ageInHours = 0
-	}
-	t.Age = ageInHours / 24
-
-	oldStage := t.Stage
-	a.updateStageLocked(oldStage)
 }
 
 func (a *App) updateStageLocked(previousStage string) {
@@ -296,18 +295,14 @@ func (a *App) updateStageLocked(previousStage string) {
 		return
 	}
 
-	switch {
-	case a.currentTamagotchi.Age < 1:
-		a.currentTamagotchi.Stage = "egg"
-	case a.currentTamagotchi.Age < 3:
-		a.currentTamagotchi.Stage = "baby"
-	case a.currentTamagotchi.Age < 7:
-		a.currentTamagotchi.Stage = "child"
-	case a.currentTamagotchi.Age < 14:
-		a.currentTamagotchi.Stage = "teen"
-	default:
-		a.currentTamagotchi.Stage = "adult"
+	t := a.currentTamagotchi
+	level := 0
+	for i, day := range growthDays {
+		if t.Age >= day {
+			level = i
+		}
 	}
+	t.Stage = growthStages[level]
 
 	if previousStage != a.currentTamagotchi.Stage {
 		a.addGameEvent("EVOLUTION", fmt.Sprintf("Your tamagotchi evolved to %s! 🎉", a.currentTamagotchi.Stage))
@@ -344,7 +339,7 @@ func (a *App) requestRefresh() {
 
 func (a *App) refreshUI() {
 	a.uiMu.Lock()
-	if !a.tuiRunning || !a.uiReady || (!a.needsRefresh && !a.activityActive) || a.TApp == nil {
+	if !a.tuiRunning || !a.uiReady || a.TApp == nil {
 		a.uiMu.Unlock()
 		return
 	}
@@ -354,6 +349,12 @@ func (a *App) refreshUI() {
 
 	a.TApp.QueueUpdateDraw(func() {
 		a.tickActivity(time.Now())
+		if a.activity == nil && a.modal == nil && a.spriteView != nil {
+			name, _ := a.TLayout.GetItem(0).(*tview.Pages).GetFrontPage()
+			if name == statusSection {
+				a.updateSpriteView(a.spriteView)
+			}
+		}
 		if !refresh {
 			return
 		}
@@ -396,12 +397,14 @@ func (a *App) updateConfigFromState() {
 	a.stateMu.RLock()
 	a.Config.App.TickRemainder = a.timeAccumulator
 	a.stateMu.RUnlock()
+	a.Config.Tamagotchi.Species = t.Species
 	a.Config.Tamagotchi.HealthyTicks = t.HealthyTicks
 	a.Config.Tamagotchi.Cleanliness = t.Cleanliness
-	a.Config.Tamagotchi.Diaper = t.Diaper
+	a.Config.Tamagotchi.Grooming = t.Grooming
+	a.Config.Tamagotchi.GroomTicks = t.GroomTicks
 	a.Config.Tamagotchi.CareTicks = t.CareTicks
 	a.Config.Tamagotchi.LastWash = t.LastWash
-	a.Config.Tamagotchi.LastChange = t.LastChange
+	a.Config.Tamagotchi.LastBrush = t.LastBrush
 	a.Config.Tamagotchi.Name = t.Name
 	a.Config.Tamagotchi.Age = t.Age
 	a.Config.Tamagotchi.Hunger = t.Hunger
@@ -444,7 +447,8 @@ func (a *App) eventsSnapshot() []GameEvent {
 func newDefaultTamagotchi(name string) *Tamagotchi {
 	now := time.Now()
 	return &Tamagotchi{
-		Cleanliness: 100, Diaper: 100,
+		Species:     randomSpecies(),
+		Cleanliness: 100, Grooming: 100,
 		Name:      name,
 		Age:       0,
 		Hunger:    50,

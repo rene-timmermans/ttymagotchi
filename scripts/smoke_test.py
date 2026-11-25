@@ -28,8 +28,8 @@ tamagotchi:
   health: 80
   energy: 10
   cleanliness: 10
-  diaper: 10
-  stage: child
+  grooming: 10
+  stage: baby
   created: {now}
   is_alive: true
 """)
@@ -68,10 +68,10 @@ tamagotchi:
         pump(0.6)
         saw("Status:")
         send(b"\x19")
-        send(b"\x1b[B\r")  # Select the next item: change diaper
-        saw("Changing")
+        send(b"\x1b[B\r")  # Select the next item: brush fur
+        saw("Brushing")
         pump(4.2)  # Complete this animation naturally
-        saw("Freshness")
+        saw("brushed!")
         send(b"\r")
         send(b"\x0c")  # Ctrl+L: Sleep
         send(b"\x1b[B\x1b[B\r")
@@ -109,9 +109,9 @@ tamagotchi:
         assert os.waitstatus_to_exitcode(status) == 0, f"Exit status: {status}"
         assert b"DATA RACE" not in output, "Go race detector reported a race"
         saved = save.read_text()
-        for expected in ("speed_percent: 50", "cleanliness: 100", "diaper: 100", "hunger: 0", "health: 70"):
+        for expected in ("speed_percent: 50", "cleanliness: 100", "grooming: 100", "hunger: 0", "health: 70"):
             assert expected in saved, f"Missing saved state: {expected}\n{saved}"
-        print("PTY smoke test passed: wash, change, sleep, speed, feeding, overfeeding, quit and save.")
+        print("PTY smoke test passed: wash, brushing, sleep, speed, feeding, overfeeding, quit and save.")
     finally:
         if not exited:
             try:
