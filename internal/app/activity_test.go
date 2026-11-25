@@ -45,18 +45,8 @@ func TestAllGamesRequireCompletion(t *testing.T) {
 				if g.phase == "between" {
 					a.tickActivity(g.deadline.Add(time.Millisecond))
 				}
-				if g.kind == "timing" {
-					g.started = time.Now().Add(-12 * 65 * time.Millisecond)
-					key(a, tcell.KeyRune, ' ')
-				} else {
-					if g.phase == "show" {
-						a.tickActivity(g.started.Add(5 * time.Second))
-					}
-					seq := append([]int(nil), g.sequence...)
-					for _, d := range seq {
-						key(a, []tcell.Key{tcell.KeyUp, tcell.KeyRight, tcell.KeyDown, tcell.KeyLeft}[d], 0)
-					}
-				}
+				winRound(t, a)
+
 			}
 			g := a.activity
 			if g.phase != "result" || g.score != 3 {
@@ -177,5 +167,57 @@ func TestActivityDrawsInSmallTerminal(t *testing.T) {
 	}
 	if !strings.Contains(visible.String(), "Time left:") {
 		t.Fatal("game not visible")
+	}
+}
+
+func winRound(t *testing.T, a *App) {
+	t.Helper()
+	g := a.activity
+	switch g.kind {
+	case "timing":
+		g.started = time.Now().Add(-12 * 65 * time.Millisecond)
+		key(a, tcell.KeyRune, ' ')
+	case "memory", "arrows":
+		if g.phase == "show" {
+			a.tickActivity(g.started.Add(5 * time.Second))
+		}
+		for _, d := range append([]int(nil), g.sequence...) {
+			key(a, []tcell.Key{tcell.KeyUp, tcell.KeyRight, tcell.KeyDown, tcell.KeyLeft}[d], 0)
+		}
+	case "runner":
+		for g.phase == "playing" {
+			step := g.step
+			safe := (g.sequence[step] + 1) % 3
+			g.started = time.Now().Add(-time.Duration(step) * 700 * time.Millisecond)
+			for g.lane < safe {
+				key(a, tcell.KeyRight, 0)
+			}
+			for g.lane > safe {
+				key(a, tcell.KeyLeft, 0)
+			}
+			g.started = time.Now().Add(-time.Duration(step+1)*700*time.Millisecond - 10*time.Millisecond)
+			a.tickActivity(time.Now())
+		}
+	case "notes":
+		for _, note := range append([]int(nil), g.sequence...) {
+			key(a, tcell.KeyRune, rune('1'+note))
+		}
+	case "drawing":
+		for _, move := range []struct {
+			key tcell.Key
+			n   int
+		}{{tcell.KeyRight, 4}, {tcell.KeyDown, 2}, {tcell.KeyLeft, 4}, {tcell.KeyUp, 2}} {
+			for n := 0; n < move.n; n++ {
+				key(a, move.key, 0)
+			}
+		}
+	case "reading":
+		key(a, tcell.KeyRune, rune('1'+g.target))
+	case "seek":
+		a.tickActivity(g.started.Add(1300 * time.Millisecond))
+		a.tickActivity(g.started.Add(time.Duration(len(g.sequence)) * 800 * time.Millisecond))
+		key(a, tcell.KeyRune, rune('1'+g.target))
+	default:
+		t.Fatalf("no driver for %s", g.kind)
 	}
 }

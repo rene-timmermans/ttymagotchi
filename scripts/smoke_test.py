@@ -3,6 +3,8 @@
 import datetime
 import fcntl
 import os
+import json
+import re
 from pathlib import Path
 import pty
 import select
@@ -14,6 +16,8 @@ import time
 
 binary = str(Path(sys.argv[1] if len(sys.argv) > 1 else "bin/termagotchi").resolve())
 pet_stage = sys.argv[2] if len(sys.argv) > 2 else "adult"
+language = sys.argv[3] if len(sys.argv) > 3 else "en"
+catalog = json.loads((Path(__file__).resolve().parent.parent / "internal/app/locales" / (language + ".json")).read_text())
 young = pet_stage in ("egg", "hatchling", "baby")
 care_field = "diaper" if young else "grooming"
 with tempfile.TemporaryDirectory(prefix="termagotchi-smoke-") as config_dir:
@@ -24,6 +28,7 @@ with tempfile.TemporaryDirectory(prefix="termagotchi-smoke-") as config_dir:
     birth = (current_time - datetime.timedelta(days={"egg": 0, "hatchling": 1, "baby": 2}.get(pet_stage, 14))).isoformat()
     save = save_dir / "config.yml"
     save.write_text(f"""app:
+  language: {language}
   speed_percent: 50
   last_login: {now}
 tamagotchi:
@@ -61,49 +66,70 @@ tamagotchi:
         pump(0.35)
 
     def saw(text):
-        assert text.encode() in output, f"Missing terminal output: {text}"
+        ansi = r"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[()][A-Za-z0-9]"
+        plain = re.sub(ansi, "", output.decode("utf-8", errors="replace"))
+        assert "".join(text.split()) in "".join(plain.split()), f"Missing terminal output: {text}"
+
+    def saw_key(key):
+        saw(catalog[key].split("%")[0])
 
     try:
         pump(0.8)
         send(b"\x19")  # Ctrl+Y: Hygiene
-        saw("HYGIENE")
+        saw_key("=== HYGIENE ===")
         send(b"\x1b[B\r")
-        saw("Washing")
+        saw_key("Washing away the dirt...")
         pump(0.5)
         send(b"\x1b")  # Skip bath
         pump(0.6)
-        saw("Status:")
+        saw_key("Status: %s")
         send(b"\x19")
         send(b"\x1b[B\r")  # Select the next item: brush fur
-        saw("Diaper" if young else "Brushing")
+        saw_key("Diaper" if young else "Brushing")
         pump(4.2)  # Complete this animation naturally
-        saw("diaper!" if young else "brushed!")
+        saw_key("Fresh diaper! Diaper %d → 100" if young else "Freshly brushed! Brushing %d → 100")
         send(b"\r")
         send(b"\x0c")  # Ctrl+L: Sleep
         send(b"\x1b[B\x1b[B\r")
-        saw("Sleeping")
+        saw_key("Sleeping peacefully...")
         saw("Zzz")
         send(b"\x1b")
         pump(0.6)
-        saw("Status:")
+        saw_key("Status: %s")
         send(b"\x0f")  # Ctrl+O: Options
-        saw("Speed:")
+        saw_key("Speed: %d%%   ← slower / faster →   (+ / -)")
+        send(b"\x1b[B" * (["en", "fr", "es", "de"].index(language) + 1) + b"\r")
+        assert f"language: {language}" in save.read_text(), "Language choice not saved"
         send(b"+")
         assert "speed_percent: 51" in save.read_text(), "Speed was not saved immediately"
         send(b"-")
         assert "speed_percent: 50" in save.read_text(), "Speed decrease was not saved"
+        send(b"\x10")  # Ctrl+P: Play
+        send(b"\x1b[B" * 3 + b"\r")  # Run Around
+        saw_key("Dodge six obstacles. Move left/right with arrows or A/D.")
+        send(b"\r")
+        saw_key("Dodge! ← / → or A / D")
+        send(b"\x1b")
+        pump(0.6)
         send(b"\x06")  # Ctrl+F: Feed
         send(b"\x1b[B\x1b[B\x1b[B\r")
-        saw("Dinner")
+        saw_key("Dinner is coming!")
         pump(3.2)
-        saw("Yum!")
+        saw_key("Yum! ")
         send(b"\r")
         send(b"\x1b[B" * 7 + b"\r")  # Steak exceeds remaining hunger
         pump(3.2)
-        saw("Overfed!")
+        saw_key("Overfed! Your pet feels sick.\n")
         send(b"\x1b")
         pump(0.6)
-        saw("Status:")
+        saw_key("Status: %s")
+        send(b"\x0c")
+        send(b"\r")  # Energy is now 70: refuse further sleep.
+        saw_key("No!")
+        saw_key("Not sleepy! Energy must be 60% or lower.")
+        pump(0.4)
+        send(b"\x1b")
+        pump(0.6)
         send(b"\x03")
         for _ in range(50):
             child, status = os.waitpid(pid, os.WNOHANG)
@@ -115,9 +141,9 @@ tamagotchi:
         assert os.waitstatus_to_exitcode(status) == 0, f"Exit status: {status}"
         assert b"DATA RACE" not in output, "Go race detector reported a race"
         saved = save.read_text()
-        for expected in ("speed_percent: 50", "cleanliness: 100", f"{care_field}: 100", "hunger: 0", "health: 70"):
+        for expected in ("speed_percent: 50", "cleanliness: 100", f"{care_field}: 100", "hunger: 0", "health: 70", "energy: 70", f"language: {language}"):
             assert expected in saved, f"Missing saved state: {expected}\n{saved}"
-        print(f"PTY smoke test passed ({pet_stage}): wash, {care_field}, sleep, speed, feeding, overfeeding, quit and save.")
+        print(f"PTY smoke test passed ({pet_stage}, {language}): wash, {care_field}, sleep, speed, feeding, overfeeding, quit and save.")
     finally:
         if not exited:
             try:

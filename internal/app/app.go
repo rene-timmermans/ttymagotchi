@@ -19,6 +19,7 @@ type App struct {
 	TLayout           *tview.Flex
 	Config            *config.Config
 	viewsList         map[string]*tview.List
+	infoView          *tview.TextView
 	spriteView        *tview.TextView
 	currentTamagotchi *Tamagotchi
 	gameEvents        []GameEvent
@@ -40,6 +41,7 @@ type App struct {
 
 // NewApp returns an instance of the application, initialized with the provided config
 func NewApp(cfg *config.Config) *App {
+	cfg.App.Language = normalizeLanguage(cfg.App.Language)
 	app := &App{
 		TApp:           tview.NewApplication(),
 		done:           make(chan struct{}),
@@ -170,10 +172,10 @@ func (a *App) showRestartModal() {
 	}
 
 	modal := tview.NewModal().
-		SetText("Are you sure you want to restart?\n\nThis will reset your tamagotchi to a new egg.\nAll progress will be lost!").
-		AddButtons([]string{"Cancel", "Restart"}).
+		SetText(a.tr("Are you sure you want to restart?\n\nThis will reset your tamagotchi to a new egg.\nAll progress will be lost!")).
+		AddButtons([]string{a.tr("Cancel"), a.tr("Restart")}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-			if buttonLabel == "Restart" {
+			if buttonLabel == a.tr("Restart") {
 				a.restartTamagotchi()
 			}
 			a.TApp.SetRoot(a.TLayout, true).SetFocus(a.TLayout)
@@ -197,7 +199,7 @@ func (a *App) restartTamagotchi() {
 	a.gameEvents = make([]GameEvent, 0)
 	a.eventsMu.Unlock()
 
-	a.addGameEvent("RESTART", fmt.Sprintf("Started a new tamagotchi named %s! 🥚", newName))
+	a.addLocalizedEvent("RESTART", "Started a new tamagotchi named %s! 🥚", newName)
 	a.updateConfigFromState()
 }
 
@@ -318,7 +320,7 @@ func (a *App) updateStageLocked(previousStage string) {
 	}
 
 	if previousStage != a.currentTamagotchi.Stage {
-		a.addGameEvent("EVOLUTION", fmt.Sprintf("Your tamagotchi evolved to %s! 🎉", a.currentTamagotchi.Stage))
+		a.addLocalizedEvent("EVOLUTION", "Your tamagotchi evolved to %s! 🎉", translatedArgument(a.currentTamagotchi.Stage))
 	}
 }
 
@@ -333,7 +335,7 @@ func (a *App) applyOfflineProgress() {
 	}
 
 	if a.advanceTime(elapsed) {
-		a.addGameEvent("PROGRESS", fmt.Sprintf("Time passed while you were away: %s.", formatDuration(elapsed)))
+		a.addLocalizedEvent("PROGRESS", "Time passed while you were away: %s.", durationArgument(elapsed))
 		a.updateConfigFromState()
 	}
 }
@@ -504,12 +506,9 @@ func formatDuration(d time.Duration) string {
 }
 
 func (a *App) addGameEvent(eventType, message string) {
-	event := GameEvent{
-		Type:      eventType,
-		Message:   message,
-		Timestamp: time.Now(),
-	}
-
+	a.addGameEventRecord(GameEvent{Type: eventType, Message: message, Timestamp: time.Now()})
+}
+func (a *App) addGameEventRecord(event GameEvent) {
 	a.eventsMu.Lock()
 	a.gameEvents = append(a.gameEvents, event)
 
@@ -556,7 +555,7 @@ func (a *App) checkDeathLocked() {
 		t.HealthyTicks = 0
 		if t.IsAlive {
 			t.IsAlive = false
-			a.addGameEvent("DEATH", "Your tamagotchi has passed away... 💔")
+			a.addLocalizedEvent("DEATH", "Your tamagotchi has passed away... 💔")
 		}
 	}
 }

@@ -14,7 +14,7 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 
 	t, ok := a.tamagotchiSnapshot()
 	if !ok {
-		listStatus.AddItem("No tamagotchi data available.", "", 0, nil)
+		listStatus.AddItem(a.tr("No tamagotchi data available."), "", 0, nil)
 		if a.spriteView != nil {
 			a.spriteView.SetText("\n  ??\n")
 		}
@@ -22,25 +22,25 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 	}
 
 	// Status header
-	status := "🟢 Alive"
+	status := a.tr("🟢 Alive")
 	if t.Health <= 40 {
-		status = "🤒 Sick — needs care"
+		status = a.tr("🤒 Sick — needs care")
 	}
 	if !t.IsAlive {
-		status = "🔴 Dead"
+		status = a.tr("🔴 Dead")
 	}
-	listStatus.AddItem(fmt.Sprintf("Status: %s", status), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Status: %s"), status), "", 0, nil)
 
 	// Basic info
-	listStatus.AddItem(fmt.Sprintf("Name: %s", t.Name), "", 0, nil)
-	listStatus.AddItem(fmt.Sprintf("Age: %d days", t.Age), "", 0, nil)
-	listStatus.AddItem(fmt.Sprintf("Stage: %s", stageLabel(t)), "", 0, nil)
-	listStatus.AddItem("Species: "+speciesLabel(t), "", 0, nil)
-	listStatus.AddItem(fmt.Sprintf("Weight: %.1f grams", t.Weight), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Name: %s"), t.Name), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Age: %d days"), t.Age), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Stage: %s"), a.stageText(t)), "", 0, nil)
+	listStatus.AddItem(a.tr("Species: ")+a.tr(speciesLabel(t)), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Weight: %.1f grams"), t.Weight), "", 0, nil)
 
 	// Stats with visual bars
 	listStatus.AddItem("", "", 0, nil) // Empty line
-	listStatus.AddItem("=== STATS ===", "", 0, nil)
+	listStatus.AddItem(a.tr("=== STATS ==="), "", 0, nil)
 
 	// Hunger bar
 	hungerBar := a.createProgressBar(t.Hunger, 100)
@@ -50,7 +50,7 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 	} else if t.Hunger > 60 {
 		hungerColor = "🟡"
 	}
-	listStatus.AddItem(fmt.Sprintf("Hunger: %s %s", hungerColor, hungerBar), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Hunger: %s %s"), hungerColor, hungerBar), "", 0, nil)
 
 	// Happiness bar
 	happinessBar := a.createProgressBar(t.Happiness, 100)
@@ -60,7 +60,7 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 	} else if t.Happiness < 50 {
 		happinessColor = "😐"
 	}
-	listStatus.AddItem(fmt.Sprintf("Happiness: %s %s", happinessColor, happinessBar), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Happiness: %s %s"), happinessColor, happinessBar), "", 0, nil)
 
 	// Health bar
 	healthBar := a.createProgressBar(t.Health, 100)
@@ -70,7 +70,7 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 	} else if t.Health < 70 {
 		healthColor = "🟡"
 	}
-	listStatus.AddItem(fmt.Sprintf("Health: %s %s", healthColor, healthBar), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Health: %s %s"), healthColor, healthBar), "", 0, nil)
 
 	// Energy bar
 	energyBar := a.createProgressBar(t.Energy, 100)
@@ -80,30 +80,30 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 	} else if t.Energy < 50 {
 		energyColor = "😪"
 	}
-	listStatus.AddItem(fmt.Sprintf("Energy: %s %s", energyColor, energyBar), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Energy: %s %s"), energyColor, energyBar), "", 0, nil)
 
-	listStatus.AddItem("Hygiene: "+a.createProgressBar(hygieneLevel(t), 100), "", 0, nil)
-	listStatus.AddItem(fmt.Sprintf("Cleanliness: %s", a.createProgressBar(t.Cleanliness, 100)), "", 0, nil)
-	listStatus.AddItem(fmt.Sprintf("%s: %s", ageCareLabel(t), a.createProgressBar(ageCareLevel(t), 100)), "", 0, nil)
+	listStatus.AddItem(a.tr("Hygiene: ")+a.createProgressBar(hygieneLevel(t), 100), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Cleanliness: %s"), a.createProgressBar(t.Cleanliness, 100)), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf("%s: %s", a.tr(ageCareLabel(t)), a.createProgressBar(ageCareLevel(t), 100)), "", 0, nil)
 
 	listStatus.AddItem(a.recoveryStatus(t), "", 0, nil)
 
 	// Last actions
 	listStatus.AddItem("", "", 0, nil) // Empty line
-	listStatus.AddItem("=== LAST ACTIONS ===", "", 0, nil)
-	listStatus.AddItem(fmt.Sprintf("Last Fed: %s", t.LastFed.Format("15:04")), "", 0, nil)
-	listStatus.AddItem(fmt.Sprintf("Last Play: %s", t.LastPlay.Format("15:04")), "", 0, nil)
-	listStatus.AddItem(fmt.Sprintf("Last Sleep: %s", t.LastSleep.Format("15:04")), "", 0, nil)
+	listStatus.AddItem(a.tr("=== LAST ACTIONS ==="), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Last Fed: %s"), t.LastFed.Format("15:04")), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Last Play: %s"), t.LastPlay.Format("15:04")), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Last Sleep: %s"), t.LastSleep.Format("15:04")), "", 0, nil)
 
 	// Created date
 	listStatus.AddItem("", "", 0, nil) // Empty line
-	listStatus.AddItem("=== INFO ===", "", 0, nil)
+	listStatus.AddItem(a.tr("=== INFO ==="), "", 0, nil)
 	if t.Created.IsZero() {
-		listStatus.AddItem("Created: Unknown", "", 0, nil)
-		listStatus.AddItem("Time Alive: Unknown", "", 0, nil)
+		listStatus.AddItem(a.tr("Created: Unknown"), "", 0, nil)
+		listStatus.AddItem(a.tr("Time Alive: Unknown"), "", 0, nil)
 	} else {
-		listStatus.AddItem(fmt.Sprintf("Created: %s", t.Created.Format("2006-01-02 15:04")), "", 0, nil)
-		listStatus.AddItem(fmt.Sprintf("Time Alive: %s", time.Since(t.Created).Round(time.Second)), "", 0, nil)
+		listStatus.AddItem(fmt.Sprintf(a.tr("Created: %s"), t.Created.Format("2006-01-02 15:04")), "", 0, nil)
+		listStatus.AddItem(fmt.Sprintf(a.tr("Time Alive: %s"), time.Since(t.Created).Round(time.Second)), "", 0, nil)
 	}
 }
 
@@ -168,7 +168,7 @@ func (a *App) statusPage() (title string, content tview.Primitive) {
 		view := tview.NewTextView().
 			SetTextAlign(tview.AlignCenter).
 			SetDynamicColors(true)
-		view.SetBorder(true).SetTitle("Current Form")
+		view.SetBorder(true).SetTitle(a.tr("Current Form"))
 		a.spriteView = view
 	}
 	a.updateSpriteView(a.spriteView)

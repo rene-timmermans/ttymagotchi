@@ -32,38 +32,38 @@ func (a *App) generatePlayList(listPlay *tview.List) {
 
 	t, ok := a.tamagotchiSnapshot()
 	if !ok {
-		listPlay.AddItem("No tamagotchi available.", "", 0, nil)
+		listPlay.AddItem(a.tr("No tamagotchi available."), "", 0, nil)
 		return
 	}
 
 	if !t.IsAlive {
-		listPlay.AddItem("Your tamagotchi has passed away... 💔", "", 0, nil)
-		listPlay.AddItem("Cannot play with a dead tamagotchi", "", 0, nil)
+		listPlay.AddItem(a.tr("Your tamagotchi has passed away... 💔"), "", 0, nil)
+		listPlay.AddItem(a.tr("Cannot play with a dead tamagotchi"), "", 0, nil)
 		return
 	}
 
 	// Check if tamagotchi has enough energy to play
 	if t.Energy < 10 {
-		listPlay.AddItem("😴 Your tamagotchi is too tired to play!", "", 0, nil)
-		listPlay.AddItem("Try putting it to sleep first (Ctrl+L)", "", 0, nil)
+		listPlay.AddItem(a.tr("😴 Your tamagotchi is too tired to play!"), "", 0, nil)
+		listPlay.AddItem(a.tr("Try putting it to sleep first (Ctrl+L)"), "", 0, nil)
 		listPlay.AddItem("", "", 0, nil) // Empty line
 	}
 
-	listPlay.AddItem("=== AVAILABLE GAMES (maximum rewards) ===", "", 0, nil)
+	listPlay.AddItem(a.tr("=== AVAILABLE GAMES (maximum rewards) ==="), "", 0, nil)
 	listPlay.AddItem("", "", 0, nil) // Empty line
 
 	for i, game := range availableGames {
 		gameIndex := i // Capture the index for the closure
 		energyChange := ""
 		if game.Energy < 0 {
-			energyChange = fmt.Sprintf("Energy: %d", game.Energy)
+			energyChange = fmt.Sprintf(a.tr("Energy: %d"), game.Energy)
 		} else {
-			energyChange = fmt.Sprintf("Energy: +%d", game.Energy)
+			energyChange = fmt.Sprintf(a.tr("Energy: +%d"), game.Energy)
 		}
 
 		listPlay.AddItem(
-			fmt.Sprintf("%s (Happiness: +%d, %s, Health: +%d, Weight: -%.1fg)",
-				game.Name, game.Happiness, energyChange, game.Health, game.WeightLoss),
+			fmt.Sprintf(a.tr("%s (Happiness: +%d, %s, Health: +%d, Weight: -%.1fg)"),
+				a.tr(game.Name), game.Happiness, energyChange, game.Health, game.WeightLoss),
 			"",
 			0,
 			func() { a.playWithTamagotchi(gameIndex) },
@@ -71,11 +71,11 @@ func (a *App) generatePlayList(listPlay *tview.List) {
 	}
 
 	listPlay.AddItem("", "", 0, nil) // Empty line
-	listPlay.AddItem("=== PLAYING INFO ===", "", 0, nil)
-	listPlay.AddItem(fmt.Sprintf("Current Happiness: %d/100", t.Happiness), "", 0, nil)
-	listPlay.AddItem(fmt.Sprintf("Current Energy: %d/100", t.Energy), "", 0, nil)
-	listPlay.AddItem(fmt.Sprintf("Current Weight: %.1f grams", t.Weight), "", 0, nil)
-	listPlay.AddItem(fmt.Sprintf("Last Play: %s", t.LastPlay.Format("15:04")), "", 0, nil)
+	listPlay.AddItem(a.tr("=== PLAYING INFO ==="), "", 0, nil)
+	listPlay.AddItem(fmt.Sprintf(a.tr("Current Happiness: %d/100"), t.Happiness), "", 0, nil)
+	listPlay.AddItem(fmt.Sprintf(a.tr("Current Energy: %d/100"), t.Energy), "", 0, nil)
+	listPlay.AddItem(fmt.Sprintf(a.tr("Current Weight: %.1f grams"), t.Weight), "", 0, nil)
+	listPlay.AddItem(fmt.Sprintf(a.tr("Last Play: %s"), t.LastPlay.Format("15:04")), "", 0, nil)
 }
 
 func (a *App) playWithTamagotchi(gameIndex int) {
@@ -102,7 +102,7 @@ func (a *App) rewardGame(gameIndex, score, total int) string {
 	t := a.currentTamagotchi
 	if t == nil || !t.IsAlive || t.Energy < 10 {
 		a.stateMu.Unlock()
-		return "Your pet cannot play right now. No stats changed."
+		return a.tr("Your pet cannot play right now. No stats changed.")
 	}
 	t.Happiness = min(100, t.Happiness+happiness)
 	t.Health = min(100, t.Health+health)
@@ -112,8 +112,8 @@ func (a *App) rewardGame(gameIndex, score, total int) string {
 	a.resetRecoveryIfNeededLocked()
 	a.stateMu.Unlock()
 	a.updateConfigFromState()
-	result := fmt.Sprintf("Score %d/%d | Happiness +%d | Health +%d | Energy %d", score, total, happiness, health, game.Energy)
-	a.addGameEvent("PLAY", game.Name+": "+result)
+	result := fmt.Sprintf(a.tr("Score %d/%d | Happiness +%d | Health +%d | Energy %d"), score, total, happiness, health, game.Energy)
+	a.addLocalizedEvent("PLAY", "%s: Score %d/%d | Happiness +%d | Health +%d | Energy %d", translatedArgument(game.Name), score, total, happiness, health, game.Energy)
 	return result
 }
 

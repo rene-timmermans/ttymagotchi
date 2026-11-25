@@ -31,16 +31,16 @@ func (a *App) applyRecoveryLocked() {
 
 func (a *App) recoveryStatus(t Tamagotchi) string {
 	if !t.IsAlive {
-		return "Recovery: unavailable — your pet has passed away"
+		return a.tr("Recovery: unavailable — your pet has passed away")
 	}
 	if t.Health >= 100 {
-		return "Recovery: fully healthy"
+		return a.tr("Recovery: fully healthy")
 	}
 	if !needsMet(t) {
-		return "Recovery: keep needs at least 40% (Hunger at most 60%)"
+		return a.tr("Recovery: keep needs at least 40% (Hunger at most 60%)")
 	}
 	a.stateMu.RLock()
 	interval := a.updateInterval
 	a.stateMu.RUnlock()
-	return "Recovery: +1 health per " + formatDuration(5*interval) + " of sustained good care"
+	return a.tr("Recovery: +1 health per ") + a.duration(5*interval) + a.tr(" of sustained good care")
 }

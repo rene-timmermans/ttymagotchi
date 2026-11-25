@@ -14,6 +14,7 @@ type Config struct {
 }
 
 type AppConfig struct {
+	Language      string        `yaml:"language"`
 	SpeedPercent  int           `yaml:"speed_percent"`
 	TickRemainder time.Duration `yaml:"tick_remainder_ns"`
 	LastLogin     time.Time     `yaml:"last_login"`
@@ -62,6 +63,7 @@ func LoadConfig() (*Config, error) {
 
 	cfg := &Config{
 		App: AppConfig{
+			Language:      "en",
 			SpeedPercent:  50,
 			CurrentLogin:  time.Now(),
 			SaveDirectory: appConfigDir,
@@ -95,6 +97,11 @@ func LoadConfig() (*Config, error) {
 		}
 	}
 
+	switch cfg.App.Language {
+	case "en", "fr", "es", "de":
+	default:
+		cfg.App.Language = "en"
+	}
 	cfg.Tamagotchi.GroomTicks = max(0, min(20, cfg.Tamagotchi.GroomTicks))
 	cfg.Tamagotchi.HealthyTicks = max(0, min(4, cfg.Tamagotchi.HealthyTicks))
 	cfg.App.SpeedPercent = max(0, min(100, cfg.App.SpeedPercent))

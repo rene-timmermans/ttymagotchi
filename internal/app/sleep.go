@@ -28,24 +28,24 @@ func (a *App) generateSleepList(listSleep *tview.List) {
 
 	t, ok := a.tamagotchiSnapshot()
 	if !ok {
-		listSleep.AddItem("No tamagotchi available.", "", 0, nil)
+		listSleep.AddItem(a.tr("No tamagotchi available."), "", 0, nil)
 		return
 	}
 
 	if !t.IsAlive {
-		listSleep.AddItem("Your tamagotchi has passed away... 💔", "", 0, nil)
-		listSleep.AddItem("Cannot put a dead tamagotchi to sleep", "", 0, nil)
+		listSleep.AddItem(a.tr("Your tamagotchi has passed away... 💔"), "", 0, nil)
+		listSleep.AddItem(a.tr("Cannot put a dead tamagotchi to sleep"), "", 0, nil)
 		return
 	}
 
-	listSleep.AddItem("=== SLEEP OPTIONS ===", "", 0, nil)
+	listSleep.AddItem(a.tr("=== SLEEP OPTIONS ==="), "", 0, nil)
 	listSleep.AddItem("", "", 0, nil) // Empty line
 
 	for i, sleep := range sleepOptions {
 		sleepIndex := i // Capture the index for the closure
 		listSleep.AddItem(
-			fmt.Sprintf("%s (Energy: +%d, Health: +%d, Happiness: +%d)",
-				sleep.Name, sleep.EnergyGain, sleep.HealthGain, sleep.Happiness),
+			fmt.Sprintf(a.tr("%s (Energy: +%d, Health: +%d, Happiness: +%d)"),
+				a.tr(sleep.Name), sleep.EnergyGain, sleep.HealthGain, sleep.Happiness),
 			"",
 			0,
 			func() { a.startCare("sleep", sleepIndex) },
@@ -53,17 +53,17 @@ func (a *App) generateSleepList(listSleep *tview.List) {
 	}
 
 	listSleep.AddItem("", "", 0, nil) // Empty line
-	listSleep.AddItem("=== SLEEP INFO ===", "", 0, nil)
-	listSleep.AddItem(fmt.Sprintf("Current Energy: %d/100", t.Energy), "", 0, nil)
-	listSleep.AddItem(fmt.Sprintf("Current Health: %d/100", t.Health), "", 0, nil)
-	listSleep.AddItem(fmt.Sprintf("Current Happiness: %d/100", t.Happiness), "", 0, nil)
-	listSleep.AddItem(fmt.Sprintf("Last Sleep: %s", t.LastSleep.Format("15:04")), "", 0, nil)
+	listSleep.AddItem(a.tr("=== SLEEP INFO ==="), "", 0, nil)
+	listSleep.AddItem(fmt.Sprintf(a.tr("Current Energy: %d/100"), t.Energy), "", 0, nil)
+	listSleep.AddItem(fmt.Sprintf(a.tr("Current Health: %d/100"), t.Health), "", 0, nil)
+	listSleep.AddItem(fmt.Sprintf(a.tr("Current Happiness: %d/100"), t.Happiness), "", 0, nil)
+	listSleep.AddItem(fmt.Sprintf(a.tr("Last Sleep: %s"), t.LastSleep.Format("15:04")), "", 0, nil)
 
 	// Show sleep recommendation
 	if t.Energy < 30 {
 		listSleep.AddItem("", "", 0, nil) // Empty line
-		listSleep.AddItem("💡 Recommendation: Your tamagotchi is tired!", "", 0, nil)
-		listSleep.AddItem("   Consider a longer sleep to restore energy.", "", 0, nil)
+		listSleep.AddItem(a.tr("💡 Recommendation: Your tamagotchi is tired!"), "", 0, nil)
+		listSleep.AddItem(a.tr("   Consider a longer sleep to restore energy."), "", 0, nil)
 	}
 }
 
@@ -76,7 +76,7 @@ func (a *App) putTamagotchiToSleep(sleepIndex int) {
 	now := time.Now()
 
 	a.stateMu.Lock()
-	if a.currentTamagotchi == nil || !a.currentTamagotchi.IsAlive {
+	if a.currentTamagotchi == nil || !a.currentTamagotchi.IsAlive || a.currentTamagotchi.Energy > 60 {
 		a.stateMu.Unlock()
 		return
 	}
@@ -89,7 +89,7 @@ func (a *App) putTamagotchiToSleep(sleepIndex int) {
 	a.stateMu.Unlock()
 
 	a.updateConfigFromState()
-	a.addGameEvent("SLEEP", fmt.Sprintf("Slept for %s! Energy +%d, Health +%d", sleep.Name, sleep.EnergyGain, sleep.HealthGain))
+	a.addLocalizedEvent("SLEEP", "Slept for %s! Energy +%d, Health +%d", translatedArgument(sleep.Name), sleep.EnergyGain, sleep.HealthGain)
 }
 
 func (a *App) sleepPage() (title string, content tview.Primitive) {

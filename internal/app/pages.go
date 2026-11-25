@@ -5,6 +5,8 @@ import (
 	"github.com/rivo/tview"
 )
 
+const footerText = "Esc / Ctrl+S Status | Ctrl+F Feed | Ctrl+P Play | Ctrl+L Sleep\nCtrl+Y Hygiene | Ctrl+O Options | Ctrl+E Events\nCtrl+H Help | Ctrl+R Restart | Ctrl+C Quit"
+
 const (
 	statusSection  = "Status"
 	feedSection    = "Feed"
@@ -46,7 +48,8 @@ func (a *App) getPagesInfo() (tview.Primitive, tview.Primitive) {
 	// Info bar
 	info := tview.NewTextView().
 		SetDynamicColors(true).
-		SetText("Esc / Ctrl+S Status | Ctrl+F Feed | Ctrl+P Play | Ctrl+L Sleep\nCtrl+Y Hygiene | Ctrl+O Options | Ctrl+E Events\nCtrl+H Help | Ctrl+R Restart | Ctrl+C Quit")
+		SetText(a.tr(footerText))
+	a.infoView = info
 
 	return pages, info
 }

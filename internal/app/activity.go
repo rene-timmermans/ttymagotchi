@@ -12,31 +12,27 @@ import (
 
 // Activity state belongs exclusively to the UI event loop.
 type activity struct {
-	view                       *tview.TextView
-	focus                      tview.Primitive
-	kind, phase                string
-	index, round, score, input int
-	sequence                   []int
-	started, deadline          time.Time
-	message                    string
+	view                           *tview.TextView
+	focus                          tview.Primitive
+	kind, phase                    string
+	index, round, score, input     int
+	sequence                       []int
+	started, deadline              time.Time
+	message                        string
+	target, lane, step, posX, posY int
+	word                           string
+	choices                        []string
 }
 
 var arrows = []string{"↑", "→", "↓", "←"}
 
 func gameKind(index int) string {
-	switch index {
-	case 4, 6, 7:
-		return "memory"
-	case 3, 5:
-		return "arrows"
-	default:
-		return "timing"
-	}
+	return []string{"timing", "runner", "notes", "drawing", "memory", "arrows", "reading", "seek"}[index]
 }
 
 func (a *App) openActivity(kind string, index int) {
 	v := tview.NewTextView().SetDynamicColors(true).SetTextAlign(tview.AlignCenter)
-	v.SetBorder(true).SetTitle(" Termagotchi • Activity ").SetBorderColor(tcell.ColorLightCyan)
+	v.SetBorder(true).SetTitle(a.tr(" Termagotchi • Activity ")).SetBorderColor(tcell.ColorLightCyan)
 	a.uiMu.Lock()
 	a.activityActive = true
 	a.uiMu.Unlock()
@@ -79,6 +75,9 @@ func (a *App) startFeeding(index int) {
 func (a *App) beginRound(now time.Time) {
 	g := a.activity
 	g.phase, g.input, g.started = "playing", 0, now
+	if a.beginExtraGame(now) {
+		return
+	}
 	g.deadline = now.Add(5 * time.Second)
 	if g.kind != "timing" {
 		n := 5
@@ -98,9 +97,9 @@ func (a *App) finishRound(success bool, now time.Time) {
 	g := a.activity
 	if success {
 		g.score++
-		g.message = "[green]Great job![-]"
+		g.message = a.tr("[green]Great job![-]")
 	} else {
-		g.message = "[yellow]Try again next round![-]"
+		g.message = a.tr("[yellow]Try again next round![-]")
 	}
 	g.round++
 	if g.round == 3 {
@@ -144,7 +143,8 @@ func (a *App) activityInput(event *tcell.EventKey) *tcell.EventKey {
 			a.beginRound(now)
 		}
 	} else if g.phase == "playing" {
-		if g.kind == "timing" && event.Rune() == ' ' {
+		if a.extraGameInput(event, now) {
+		} else if g.kind == "timing" && event.Rune() == ' ' {
 			pos := timingPosition(now.Sub(g.started))
 			a.finishRound(pos >= 10 && pos <= 14, now)
 		} else if g.kind == "memory" || g.kind == "arrows" {
@@ -197,17 +197,17 @@ func (a *App) finishFeeding() {
 	after, _ := a.tamagotchiSnapshot()
 	g.phase = "result"
 	if !before.IsAlive {
-		g.message = "Your pet cannot eat right now."
+		g.message = a.tr("Your pet cannot eat right now.")
 		return
 	}
-	g.message = fmt.Sprintf("Hunger %d → %d | Happiness %d → %d\nEnergy %d → %d | Health %d → %d", before.Hunger, after.Hunger, before.Happiness, after.Happiness, before.Energy, after.Energy, before.Health, after.Health)
+	g.message = fmt.Sprintf(a.tr("Hunger %d → %d | Happiness %d → %d\nEnergy %d → %d | Health %d → %d"), before.Hunger, after.Hunger, before.Happiness, after.Happiness, before.Energy, after.Energy, before.Health, after.Health)
 	if after.Health < before.Health {
-		g.message = "Overfed! Your pet feels sick.\n" + g.message
+		g.message = a.tr("Overfed! Your pet feels sick.\n") + g.message
 	} else {
-		g.message = "Yum! " + g.message
+		g.message = a.tr("Yum! ") + g.message
 	}
 	if !after.IsAlive {
-		g.message += "\nYour tamagotchi has passed away..."
+		g.message += a.tr("\nYour tamagotchi has passed away...")
 	}
 }
 
@@ -216,7 +216,11 @@ func (a *App) tickActivity(now time.Time) {
 	if g == nil {
 		return
 	}
-	if isCare(g.kind) {
+	if g.kind == "refuse" {
+		if now.Sub(g.started) >= 3*time.Second {
+			g.phase = "result"
+		}
+	} else if isCare(g.kind) {
 		if g.phase != "result" && now.Sub(g.started) >= 4*time.Second {
 			a.finishCare()
 		}
@@ -224,6 +228,7 @@ func (a *App) tickActivity(now time.Time) {
 		if g.phase != "result" && now.Sub(g.started) >= 3*time.Second {
 			a.finishFeeding()
 		}
+	} else if a.tickExtraGame(now) {
 	} else {
 		switch g.phase {
 		case "show":
@@ -247,40 +252,47 @@ func (a *App) tickActivity(now time.Time) {
 func (a *App) renderActivity(now time.Time) {
 	g := a.activity
 	t, _ := a.tamagotchiSnapshot()
-	title, body, hint := "", "", "Esc: Status (cancel game) • Ctrl+C: quit"
+	title, body, hint := "", "", a.tr("Esc: Status (cancel game) • Ctrl+C: quit")
 	sprite := renderTamagotchiSprite(t)
-	if isCare(g.kind) {
-		hint = "Esc: Status (finish care) • Ctrl+C: quit"
+	if g.kind == "refuse" {
+		title = "[red]" + a.tr("No!") + "[-]"
+		body = a.tr("Not sleepy! Energy must be 60% or lower.")
+		sprite = renderActionSprite(t, "refuse", g.index, now.Sub(g.started))
+		hint = a.tr("Esc: Status • Ctrl+C: quit")
+	} else if isCare(g.kind) {
+		hint = a.tr("Esc: Status (finish care) • Ctrl+C: quit")
 		sprite = renderActionSprite(t, g.kind, g.index, now.Sub(g.started))
 		switch g.kind {
 		case "sleep":
-			title = sleepOptions[g.index].Name
-			body = "Sleeping peacefully..."
+			title = a.tr(sleepOptions[g.index].Name)
+			body = a.tr("Sleeping peacefully...")
 		case "wash":
-			title = "A bubbly bath"
-			body = "Washing away the dirt..."
+			title = a.tr("A bubbly bath")
+			body = a.tr("Washing away the dirt...")
 		case "diaper":
-			title = "Diaper"
-			body = "Changing into a fresh diaper..."
+			title = a.tr("Diaper")
+			body = a.tr("Changing into a fresh diaper...")
 		case "brush":
-			title = "Brushing"
-			body = "Brushing fur and feathers..."
+			title = a.tr("Brushing")
+			body = a.tr("Brushing fur and feathers...")
 		}
 	} else if g.kind == "food" {
-		title = availableFoods[g.index].Name
-		hint = "Esc: Status (finish care) • Ctrl+C: quit"
+		title = a.tr(availableFoods[g.index].Name)
+		hint = a.tr("Esc: Status (finish care) • Ctrl+C: quit")
 		sprite = renderActionSprite(t, g.kind, g.index, now.Sub(g.started))
 		if now.Sub(g.started) < 1500*time.Millisecond {
-			body = "Dinner is coming!"
+			body = a.tr("Dinner is coming!")
 		} else {
-			body = "Munch!"
+			body = a.tr("Munch!")
 		}
 
 	} else {
-		title = availableGames[g.index].Name
+		title = a.tr(availableGames[g.index].Name)
 		switch g.kind {
+		case "runner", "notes", "drawing", "reading", "seek":
+			body = a.extraGameText(now)
 		case "timing":
-			body = "Press SPACE when the marker is in the green zone."
+			body = a.tr("Press SPACE when the marker is in the green zone.")
 			if g.phase == "playing" {
 				var bar strings.Builder
 				pos := timingPosition(now.Sub(g.started))
@@ -298,9 +310,9 @@ func (a *App) renderActivity(now time.Time) {
 				body += "\n\n" + bar.String()
 			}
 		case "memory":
-			body = "Remember the arrows, then repeat them.\nUse arrow keys or WASD."
+			body = a.tr("Remember the arrows, then repeat them.\nUse arrow keys or WASD.")
 			if g.phase == "show" {
-				body = "Watch carefully!\n\n"
+				body = a.tr("Watch carefully!\n\n")
 				active := int(now.Sub(g.started) / (650 * time.Millisecond))
 				for i, d := range g.sequence {
 					if i == active {
@@ -310,10 +322,10 @@ func (a *App) renderActivity(now time.Time) {
 					}
 				}
 			} else if g.phase == "playing" {
-				body = fmt.Sprintf("Repeat the hidden sequence!\n\n%d / %d arrows", g.input, len(g.sequence))
+				body = fmt.Sprintf(a.tr("Repeat the hidden sequence!\n\n%d / %d arrows"), g.input, len(g.sequence))
 			}
 		case "arrows":
-			body = "Follow the arrows in order.\nUse arrow keys or WASD."
+			body = a.tr("Follow the arrows in order.\nUse arrow keys or WASD.")
 			if g.phase == "playing" {
 				body += "\n\n"
 				for i, d := range g.sequence {
@@ -328,20 +340,23 @@ func (a *App) renderActivity(now time.Time) {
 			}
 		}
 		if g.phase == "ready" {
-			body += "\n\nThree rounds • Score determines rewards\nEnergy is spent only on completion.\n\n[green]Press Enter to start[-]"
+			body += a.tr("\n\nThree rounds • Score determines rewards\nEnergy is spent only on completion.\n\n[green]Press Enter to start[-]")
 		}
 		if g.phase == "playing" {
-			body += fmt.Sprintf("\n\nTime left: %.1fs", maxWeight(0, g.deadline.Sub(now).Seconds()))
+			body += fmt.Sprintf(a.tr("\n\nTime left: %.1fs"), maxWeight(0, g.deadline.Sub(now).Seconds()))
 		}
 		if g.phase == "between" {
-			body = g.message + "\n\nNext round..."
+			body = g.message + a.tr("\n\nNext round...")
 		}
-		title += fmt.Sprintf(" • Round %d/3 • Score %d", min(3, g.round+1), g.score)
+		title += fmt.Sprintf(a.tr(" • Round %d/3 • Score %d"), min(3, g.round+1), g.score)
 	}
 	if g.phase == "result" {
 		sprite = renderTamagotchiSprite(t)
-		body = "[green]All done![-]\n\n" + tview.Escape(g.message)
-		hint = "Enter: menu • Esc: Status • Ctrl+C: quit"
+		body = a.tr("[green]All done![-]\n\n") + tview.Escape(g.message)
+		if g.kind == "refuse" {
+			body = a.tr("Not sleepy! Energy must be 60% or lower.")
+		}
+		hint = a.tr("Enter: menu • Esc: Status • Ctrl+C: quit")
 	}
 	if g.kind != "food" && !isCare(g.kind) {
 		body = strings.ReplaceAll(body, "\n\n", "\n")

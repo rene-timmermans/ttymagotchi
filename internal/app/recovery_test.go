@@ -180,7 +180,7 @@ func TestEscapeAndCtrlSFromActivities(t *testing.T) {
 			key(a, keyCode, 0)
 			assertStatus(t, a)
 			want := 1
-			if kind == "game" {
+			if kind == "game" || kind == "sleep" {
 				want = 0
 			}
 			if len(a.gameEvents) != want {

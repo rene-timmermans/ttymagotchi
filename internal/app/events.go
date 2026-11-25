@@ -13,12 +13,12 @@ func (a *App) generateEventsList(listEvents *tview.List) {
 	events := a.eventsSnapshot()
 
 	if len(events) == 0 {
-		listEvents.AddItem("No events yet!", "", 0, nil)
-		listEvents.AddItem("Start interacting with your tamagotchi to see events.", "", 0, nil)
+		listEvents.AddItem(a.tr("No events yet!"), "", 0, nil)
+		listEvents.AddItem(a.tr("Start interacting with your tamagotchi to see events."), "", 0, nil)
 		return
 	}
 
-	listEvents.AddItem("=== GAME EVENTS ===", "", 0, nil)
+	listEvents.AddItem(a.tr("=== GAME EVENTS ==="), "", 0, nil)
 	listEvents.AddItem("", "", 0, nil) // Empty line
 
 	// Show events in reverse chronological order (newest first)
@@ -46,7 +46,7 @@ func (a *App) generateEventsList(listEvents *tview.List) {
 		}
 
 		listEvents.AddItem(
-			fmt.Sprintf("%s [%s] %s", eventIcon, timeStr, event.Message),
+			fmt.Sprintf("%s [%s] %s", eventIcon, timeStr, a.eventMessage(event)),
 			"",
 			0,
 			nil,

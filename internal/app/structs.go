@@ -29,9 +29,11 @@ type Tamagotchi struct {
 }
 
 type GameEvent struct {
-	Type      string
-	Message   string
-	Timestamp time.Time
+	MessageKey  string
+	MessageArgs []any
+	Type        string
+	Message     string
+	Timestamp   time.Time
 }
 
 type Food struct {

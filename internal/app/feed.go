@@ -24,25 +24,25 @@ func (a *App) generateFeedList(listFeed *tview.List) {
 
 	t, ok := a.tamagotchiSnapshot()
 	if !ok {
-		listFeed.AddItem("No tamagotchi available.", "", 0, nil)
+		listFeed.AddItem(a.tr("No tamagotchi available."), "", 0, nil)
 		return
 	}
 
 	if !t.IsAlive {
-		listFeed.AddItem("Your tamagotchi has passed away... 💔", "", 0, nil)
-		listFeed.AddItem("Cannot feed a dead tamagotchi", "", 0, nil)
+		listFeed.AddItem(a.tr("Your tamagotchi has passed away... 💔"), "", 0, nil)
+		listFeed.AddItem(a.tr("Cannot feed a dead tamagotchi"), "", 0, nil)
 		return
 	}
 
-	listFeed.AddItem("Overfeeding damages health. At hunger 0, do not feed!", "", 0, nil)
-	listFeed.AddItem("=== AVAILABLE FOOD ===", "", 0, nil)
+	listFeed.AddItem(a.tr("Overfeeding damages health. At hunger 0, do not feed!"), "", 0, nil)
+	listFeed.AddItem(a.tr("=== AVAILABLE FOOD ==="), "", 0, nil)
 	listFeed.AddItem("", "", 0, nil) // Empty line
 
 	for i, food := range availableFoods {
 		foodIndex := i // Capture the index for the closure
 		listFeed.AddItem(
-			fmt.Sprintf("%s (Nutrition: %d, Happiness: %d, Energy: %d, Weight: +%.1fg)",
-				food.Name, food.Nutrition, food.Happiness, food.Energy, food.WeightGain),
+			fmt.Sprintf(a.tr("%s (Nutrition: %d, Happiness: %d, Energy: %d, Weight: +%.1fg)"),
+				a.tr(food.Name), food.Nutrition, food.Happiness, food.Energy, food.WeightGain),
 			"",
 			0,
 			func() { a.startFeeding(foodIndex) },
@@ -50,11 +50,11 @@ func (a *App) generateFeedList(listFeed *tview.List) {
 	}
 
 	listFeed.AddItem("", "", 0, nil) // Empty line
-	listFeed.AddItem("=== FEEDING INFO ===", "", 0, nil)
-	listFeed.AddItem(fmt.Sprintf("Current Hunger: %d/100", t.Hunger), "", 0, nil)
-	listFeed.AddItem(fmt.Sprintf("Current Health: %d/100", t.Health), "", 0, nil)
-	listFeed.AddItem(fmt.Sprintf("Current Weight: %.1f grams", t.Weight), "", 0, nil)
-	listFeed.AddItem(fmt.Sprintf("Last Fed: %s", t.LastFed.Format("15:04")), "", 0, nil)
+	listFeed.AddItem(a.tr("=== FEEDING INFO ==="), "", 0, nil)
+	listFeed.AddItem(fmt.Sprintf(a.tr("Current Hunger: %d/100"), t.Hunger), "", 0, nil)
+	listFeed.AddItem(fmt.Sprintf(a.tr("Current Health: %d/100"), t.Health), "", 0, nil)
+	listFeed.AddItem(fmt.Sprintf(a.tr("Current Weight: %.1f grams"), t.Weight), "", 0, nil)
+	listFeed.AddItem(fmt.Sprintf(a.tr("Last Fed: %s"), t.LastFed.Format("15:04")), "", 0, nil)
 }
 
 func (a *App) feedTamagotchi(foodIndex int) {
@@ -88,7 +88,7 @@ func (a *App) feedTamagotchi(foodIndex int) {
 	a.stateMu.Unlock()
 
 	a.updateConfigFromState()
-	a.addGameEvent("FEED", fmt.Sprintf("Fed %s! Hunger -%d, Happiness +%d, Health -%d", food.Name, food.Nutrition, food.Happiness, damage))
+	a.addLocalizedEvent("FEED", "Fed %s! Hunger -%d, Happiness +%d, Health -%d", translatedArgument(food.Name), food.Nutrition, food.Happiness, damage)
 }
 
 func (a *App) feedPage() (title string, content tview.Primitive) {

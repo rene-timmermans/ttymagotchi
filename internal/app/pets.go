@@ -255,6 +255,11 @@ func animalPose(t Tamagotchi, kind string, frame int) []string {
 			}
 		}
 	}
+	if kind == "refuse" && frame%2 == 1 {
+		for i := 0; i <= model.mouthRow; i++ {
+			rows[i] = "  " + rows[i]
+		}
+	}
 	return normalizePose(rows)
 }
 
@@ -290,6 +295,11 @@ func eggPose(t Tamagotchi, kind string, frame int) []string {
 	if (kind == "wash" || kind == "brush" || kind == "diaper") && frame%2 == 1 {
 		for i := range rows {
 			rows[i] = " " + rows[i]
+		}
+	}
+	if kind == "refuse" && frame%2 == 1 {
+		for i := 0; i <= 6; i++ {
+			rows[i] = "  " + rows[i]
 		}
 	}
 	return normalizePose(rows)
