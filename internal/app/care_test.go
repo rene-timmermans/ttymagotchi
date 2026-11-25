@@ -111,6 +111,7 @@ func TestHygieneDamageGradient(t *testing.T) {
 	pet := a.currentTamagotchi
 	pet.Cleanliness = 0
 	pet.Grooming = 0
+	pet.Diaper = 0
 	pet.Hunger = 0
 	pet.Health = 10
 	a.advanceTime(a.updateInterval)
@@ -124,15 +125,20 @@ func TestCareAnimationAndSingleCommit(t *testing.T) {
 		kind    string
 		index   int
 		visible string
-	}{{"wash", 0, "Washing"}, {"brush", 0, "Brushing"}, {"sleep", 0, "Sleeping"}, {"sleep", 1, "Sleeping"}, {"sleep", 2, "Sleeping"}, {"sleep", 3, "Sleeping"}}
+	}{{"wash", 0, "Washing"}, {"brush", 0, "Brushing"}, {"diaper", 0, "diaper"}, {"sleep", 0, "Sleeping"}, {"sleep", 1, "Sleeping"}, {"sleep", 2, "Sleeping"}, {"sleep", 3, "Sleeping"}}
 	for _, tc := range cases {
 		for _, skip := range []bool{false, true} {
 			a := testApp(t)
 			pet := a.currentTamagotchi
 			pet.Cleanliness = 0
 			pet.Grooming = 0
+			pet.Diaper = 0
 			pet.Energy = 0
 			pet.Health = 50
+			if tc.kind == "brush" {
+				pet.Stage = "adult"
+				pet.Created = time.Now().Add(-14 * 24 * time.Hour)
+			}
 			before := *pet
 			a.startCare(tc.kind, tc.index)
 			g := a.activity
@@ -157,6 +163,10 @@ func TestCareAnimationAndSingleCommit(t *testing.T) {
 			case "wash":
 				if pet.Cleanliness != 100 || pet.Grooming != 0 || pet.Health != 50 || pet.LastWash.IsZero() {
 					t.Fatal("wrong bath effect")
+				}
+			case "diaper":
+				if pet.Diaper != 100 || pet.LastChange.IsZero() || pet.Grooming != 0 {
+					t.Fatal("wrong diaper effect")
 				}
 			case "brush":
 				if pet.Cleanliness != 0 || pet.Grooming != 100 || pet.LastBrush.IsZero() {
@@ -199,10 +209,11 @@ func TestCareStopsDamageAndOfflineUsesSpeed(t *testing.T) {
 	pet.Hunger = 0
 	pet.Cleanliness = 0
 	pet.Grooming = 0
+	pet.Diaper = 0
 	a.startCare("wash", 0)
 	a.finishCare()
 	a.closeActivity()
-	a.startCare("brush", 0)
+	a.startCare("diaper", 0)
 	a.finishCare()
 	a.closeActivity()
 	health := pet.Health

@@ -84,7 +84,7 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 
 	listStatus.AddItem("Hygiene: "+a.createProgressBar(hygieneLevel(t), 100), "", 0, nil)
 	listStatus.AddItem(fmt.Sprintf("Cleanliness: %s", a.createProgressBar(t.Cleanliness, 100)), "", 0, nil)
-	listStatus.AddItem(fmt.Sprintf("Brushing: %s", a.createProgressBar(t.Grooming, 100)), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf("%s: %s", ageCareLabel(t), a.createProgressBar(ageCareLevel(t), 100)), "", 0, nil)
 
 	listStatus.AddItem(a.recoveryStatus(t), "", 0, nil)
 

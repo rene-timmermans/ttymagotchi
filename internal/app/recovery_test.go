@@ -17,6 +17,7 @@ func TestRecoveryNeedsAndBoundaries(t *testing.T) {
 	base.Happiness = 40
 	base.Cleanliness = 40
 	base.Grooming = 40
+	base.Stage = "adult"
 	if !needsMet(base) {
 		t.Fatal("exact 40% needs should permit recovery, even at health 1")
 	}
@@ -57,12 +58,12 @@ func TestRecoveryResetsOnNeglectAndOverfeeding(t *testing.T) {
 	p.Hunger = 0
 	p.Health = 50
 	a.advanceTime(4 * a.updateInterval)
-	p.Grooming = 39
+	p.Diaper = 39
 	a.advanceTime(a.updateInterval)
 	if p.Health != 50 || p.HealthyTicks != 0 {
 		t.Fatal("neglect did not reset recovery")
 	}
-	p.Grooming = 100
+	p.Diaper = 100
 	a.advanceTime(4 * a.updateInterval)
 	if p.Health != 50 {
 		t.Fatal("did not require a fresh recovery period")
@@ -163,8 +164,11 @@ func TestEscapeAndCtrlSFromEveryPageAndRestartDialog(t *testing.T) {
 
 func TestEscapeAndCtrlSFromActivities(t *testing.T) {
 	for _, keyCode := range []tcell.Key{tcell.KeyEscape, tcell.KeyCtrlS} {
-		for _, kind := range []string{"game", "food", "sleep", "wash", "brush"} {
+		for _, kind := range []string{"game", "food", "sleep", "wash", "brush", "diaper"} {
 			a := testApp(t)
+			if kind == "brush" {
+				a.currentTamagotchi.Stage = "adult"
+			}
 			a.goToSection(playSection, nil)
 			if kind == "game" {
 				a.playWithTamagotchi(0)

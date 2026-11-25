@@ -26,6 +26,8 @@ type TamagotchiConfig struct {
 	HealthyTicks int       `yaml:"healthy_ticks"`
 	Cleanliness  int       `yaml:"cleanliness"`
 	GroomTicks   int       `yaml:"groom_ticks"`
+	Diaper       int       `yaml:"diaper"`
+	LastChange   time.Time `yaml:"last_change"`
 	Grooming     int       `yaml:"grooming"`
 	CareTicks    int       `yaml:"care_ticks"`
 	LastWash     time.Time `yaml:"last_wash"`
@@ -65,7 +67,7 @@ func LoadConfig() (*Config, error) {
 			SaveDirectory: appConfigDir,
 		},
 		Tamagotchi: TamagotchiConfig{
-			Cleanliness: 100, Grooming: 100,
+			Cleanliness: 100, Diaper: 100, Grooming: 100,
 			Name:      "Tammy",
 			Age:       0,
 			Hunger:    50,
@@ -97,6 +99,7 @@ func LoadConfig() (*Config, error) {
 	cfg.Tamagotchi.HealthyTicks = max(0, min(4, cfg.Tamagotchi.HealthyTicks))
 	cfg.App.SpeedPercent = max(0, min(100, cfg.App.SpeedPercent))
 	cfg.Tamagotchi.Cleanliness = max(0, min(100, cfg.Tamagotchi.Cleanliness))
+	cfg.Tamagotchi.Diaper = max(0, min(100, cfg.Tamagotchi.Diaper))
 	cfg.Tamagotchi.Grooming = max(0, min(100, cfg.Tamagotchi.Grooming))
 	if cfg.Tamagotchi.Health <= 0 {
 		cfg.Tamagotchi.Health = 0

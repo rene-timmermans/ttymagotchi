@@ -259,6 +259,9 @@ func (a *App) renderActivity(now time.Time) {
 		case "wash":
 			title = "A bubbly bath"
 			body = "Washing away the dirt..."
+		case "diaper":
+			title = "Diaper"
+			body = "Changing into a fresh diaper..."
 		case "brush":
 			title = "Brushing"
 			body = "Brushing fur and feathers..."

@@ -50,6 +50,8 @@ func TestNeglectGraduallyLowersHappiness(t *testing.T) {
 			p.Cleanliness = 20
 		case "brushing":
 			p.Grooming = 20
+			p.Stage = "adult"
+			p.Created = time.Now().Add(-14 * 24 * time.Hour)
 		case "energy":
 			p.Energy = 19
 		}
@@ -77,13 +79,14 @@ func TestResultKeepsActualHappinessExpression(t *testing.T) {
 	}
 }
 
-func TestNeglectedBrushingHurtsHealthAtEveryAge(t *testing.T) {
+func TestNeglectedAgeCareHurtsHealthAtEveryAge(t *testing.T) {
 	for i, stage := range growthStages {
 		a := testApp(t)
 		p := a.currentTamagotchi
 		p.Stage = stage
 		p.Created = time.Now().Add(-time.Duration(growthDays[i]) * 24 * time.Hour)
 		p.Grooming = 0
+		p.Diaper = 0
 		p.Hunger = 0
 		a.advanceTime(a.updateInterval)
 		if p.Health != 95 || p.Happiness != 49 || needsMet(*p) {

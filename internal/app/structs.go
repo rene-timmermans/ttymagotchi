@@ -7,6 +7,8 @@ type Tamagotchi struct {
 	HealthyTicks int
 	Cleanliness  int
 	GroomTicks   int
+	Diaper       int
+	LastChange   time.Time
 	Grooming     int
 	CareTicks    int
 	LastWash     time.Time

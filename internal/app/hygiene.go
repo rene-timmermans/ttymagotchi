@@ -29,21 +29,33 @@ func (a *App) generateHygieneList(list *tview.List) {
 	}
 	list.AddItem("=== HYGIENE ===", "", 0, nil)
 	list.AddItem("Wash — a bubbly bath", "", 0, func() { a.startCare("wash", 0) })
-	list.AddItem("Brushing — care for fur and feathers", "", 0, func() { a.startCare("brush", 0) })
+	if needsDiaper(t) {
+		list.AddItem("Diaper — change into a fresh diaper", "", 0, func() { a.startCare("diaper", 0) })
+	} else {
+		list.AddItem("Brushing — care for fur and feathers", "", 0, func() { a.startCare("brush", 0) })
+	}
 	list.AddItem("", "", 0, nil)
 	list.AddItem("Hygiene: "+a.createProgressBar(hygieneLevel(t), 100), "", 0, nil)
 	list.AddItem("Cleanliness: "+a.createProgressBar(t.Cleanliness, 100), "", 0, nil)
-	list.AddItem("Brushing: "+a.createProgressBar(t.Grooming, 100), "", 0, nil)
+	list.AddItem(ageCareLabel(t)+": "+a.createProgressBar(ageCareLevel(t), 100), "", 0, nil)
 	list.AddItem(fmt.Sprintf("Health: %d/100", t.Health), "", 0, nil)
 	list.AddItem("", "", 0, nil)
 	list.AddItem("At 20% or below, neglected hygiene damages health.", "", 0, nil)
 	list.AddItem("Closer to 0% = more damage. Each active need counts independently.", "", 0, nil)
-	list.AddItem("Brushing declines very slowly: 100 → 0 in ~7 days at 50% speed.", "", 0, nil)
-	list.AddItem("Baths restore cleanliness; Brushing restores coat care.", "", 0, nil)
+	if needsDiaper(t) {
+		list.AddItem("Diapers are needed through stage 3; Brushing starts at stage 4.", "", 0, nil)
+	} else {
+		list.AddItem("Brushing declines very slowly: 100 → 0 in ~7 days at 50% speed.", "", 0, nil)
+	}
+	list.AddItem("Baths restore cleanliness; the second action restores age-specific care.", "", 0, nil)
+	careName, careAt := "Last brushing", t.LastBrush
+	if needsDiaper(t) {
+		careName, careAt = "Last diaper change", t.LastChange
+	}
 	for _, action := range []struct {
 		name string
 		at   time.Time
-	}{{"Last bath", t.LastWash}, {"Last brushing", t.LastBrush}} {
+	}{{"Last bath", t.LastWash}, {careName, careAt}} {
 		when := "Not yet"
 		if !action.at.IsZero() {
 			when = action.at.Format("02 Jan 15:04")
@@ -59,7 +71,9 @@ func (a *App) hygienePage() (string, tview.Primitive) {
 	return hygieneSection, list
 }
 
-func isCare(kind string) bool { return kind == "sleep" || kind == "wash" || kind == "brush" }
+func isCare(kind string) bool {
+	return kind == "sleep" || kind == "wash" || kind == "brush" || kind == "diaper"
+}
 
 func (a *App) startCare(kind string, index int) {
 	if !isCare(kind) || a.activity != nil || a.modal != nil {
@@ -69,7 +83,7 @@ func (a *App) startCare(kind string, index int) {
 		return
 	}
 	t, ok := a.tamagotchiSnapshot()
-	if !ok || !t.IsAlive {
+	if !ok || !t.IsAlive || ((kind == "brush" || kind == "diaper") && kind != ageCareKind(t)) {
 		return
 	}
 	a.openActivity(kind, index)
@@ -101,7 +115,16 @@ func (a *App) finishCare() {
 			g.message = "Your pet cannot be cared for right now."
 			return
 		}
-		if g.kind == "wash" {
+		if (g.kind == "brush" || g.kind == "diaper") && g.kind != ageCareKind(*t) {
+			a.stateMu.Unlock()
+			g.message = "Your pet has grown: use " + ageCareLabel(*t) + " now."
+			return
+		}
+		if g.kind == "diaper" {
+			t.Diaper = 100
+			t.LastChange = time.Now()
+			g.message = fmt.Sprintf("Fresh diaper! Diaper %d → 100", before.Diaper)
+		} else if g.kind == "wash" {
 			t.Cleanliness = 100
 			t.LastWash = time.Now()
 			g.message = fmt.Sprintf("Squeaky clean! Cleanliness %d → 100", before.Cleanliness)

@@ -27,7 +27,7 @@ func (a *App) generateHelpList(listHelp *tview.List) {
 	listHelp.AddItem("→ Preteen → Teen → Adolescent → Adult (10 forms)", "", 0, nil)
 	listHelp.AddItem("Random cat, dog, rabbit, guinea pig or penguin; saved per pet.", "", 0, nil)
 	listHelp.AddItem("All species start in the same mystery egg.", "", 0, nil)
-	listHelp.AddItem("Brushing cares for fur/feathers; its bar takes ~7 days at 50% speed.", "", 0, nil)
+	listHelp.AddItem("Diaper: stages 1–3. Brushing: stage 4 onward (~7 days at 50%).", "", 0, nil)
 	listHelp.AddItem("Your tamagotchi evolves based on age.", "", 0, nil)
 	listHelp.AddItem("", "", 0, nil) // Empty line
 
@@ -50,7 +50,7 @@ func (a *App) generateHelpList(listHelp *tview.List) {
 	listHelp.AddItem("Keep Happiness, Energy and active Hygiene needs >= 40%.", "", 0, nil)
 	listHelp.AddItem("Keep Hunger <= 60%; a lapse resets the recovery timer.", "", 0, nil)
 	listHelp.AddItem("Hygiene <= 20 damages health; closer to 0 means more damage.", "", 0, nil)
-	listHelp.AddItem("Baths and Brushing restore separate hygiene needs.", "", 0, nil)
+	listHelp.AddItem("Baths and Diaper/Brushing restore age-specific hygiene needs.", "", 0, nil)
 	listHelp.AddItem("Sleep and hygiene animate; Enter returns from results.", "", 0, nil)
 	listHelp.AddItem("Speed: 0% = 1 week, 50% = 8 hours, 100% = 5 minutes.", "", 0, nil)
 	listHelp.AddItem("This is the time for hunger 0 → 100; offline time counts.", "", 0, nil)
@@ -67,7 +67,7 @@ func (a *App) generateHelpList(listHelp *tview.List) {
 	listHelp.AddItem("Ctrl+F: Feed - Give food to tamagotchi", "", 0, nil)
 	listHelp.AddItem("Ctrl+P: Play - Play games with tamagotchi", "", 0, nil)
 	listHelp.AddItem("Ctrl+L: Sleep - Put tamagotchi to sleep", "", 0, nil)
-	listHelp.AddItem("Ctrl+Y: Hygiene - Wash or Brushing", "", 0, nil)
+	listHelp.AddItem("Ctrl+Y: Hygiene - Wash, Diaper (1–3) or Brushing (4+)", "", 0, nil)
 	listHelp.AddItem("Ctrl+O: Options - Adjust speed with Left/Right or +/-", "", 0, nil)
 	listHelp.AddItem("Ctrl+E: Events - View game history", "", 0, nil)
 	listHelp.AddItem("Ctrl+H: Help - Show this help page", "", 0, nil)

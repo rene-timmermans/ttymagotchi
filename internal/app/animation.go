@@ -135,7 +135,7 @@ func actionPose(t Tamagotchi, kind string, frame int) []string {
 			lines[2] = " / |  o  | \\"
 		}
 	}
-	if kind == "brush" {
+	if kind == "brush" || kind == "diaper" {
 		// The pet shifts its feet while its coat is brushed.
 		last := len(lines) - 1
 		if frame%2 == 0 {
@@ -205,6 +205,21 @@ func renderActionSprite(t Tamagotchi, kind string, index int, elapsed time.Durat
 		water := []string{strings.Repeat("~ ", width/2+2), strings.Repeat(" ~", width/2+2)}
 		s.put(x-2, y+len(pose)-1, water[frame%2])
 		s.put(x-3, y+len(pose), "\\"+strings.Repeat("_", width+4)+"/")
+	case "diaper":
+		waistY := y + waistRow
+		if frame < 5 {
+			s.put(x+mouthCol-4, waistY, "\\__###__/")
+		} else if frame < 10 {
+			s.put(x+mouthCol-4+frame%5, waistY, "▱▱")
+		} else {
+			s.put(x+mouthCol-4, waistY, "\\___♡___/")
+		}
+		if frame%2 == 0 {
+			s.put(x-2, faceY, "✧")
+		} else {
+			s.put(x+width+1, faceY, "✧")
+		}
+
 	case "brush":
 		// The bristles touch the coat and sweep across the chest and lower body.
 		brushY := y + waistRow + (frame/4)%2

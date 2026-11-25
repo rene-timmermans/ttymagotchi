@@ -13,10 +13,15 @@ import termios
 import time
 
 binary = str(Path(sys.argv[1] if len(sys.argv) > 1 else "bin/termagotchi").resolve())
+pet_stage = sys.argv[2] if len(sys.argv) > 2 else "adult"
+young = pet_stage in ("egg", "hatchling", "baby")
+care_field = "diaper" if young else "grooming"
 with tempfile.TemporaryDirectory(prefix="termagotchi-smoke-") as config_dir:
     save_dir = Path(config_dir) / "termagotchi"
     save_dir.mkdir()
-    now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    current_time = datetime.datetime.now(datetime.timezone.utc)
+    now = current_time.isoformat()
+    birth = (current_time - datetime.timedelta(days={"egg": 0, "hatchling": 1, "baby": 2}.get(pet_stage, 14))).isoformat()
     save = save_dir / "config.yml"
     save.write_text(f"""app:
   speed_percent: 50
@@ -28,9 +33,10 @@ tamagotchi:
   health: 80
   energy: 10
   cleanliness: 10
+  diaper: 10
   grooming: 10
-  stage: baby
-  created: {now}
+  stage: {pet_stage}
+  created: {birth}
   is_alive: true
 """)
     pid, master = pty.fork()
@@ -69,9 +75,9 @@ tamagotchi:
         saw("Status:")
         send(b"\x19")
         send(b"\x1b[B\r")  # Select the next item: brush fur
-        saw("Brushing")
+        saw("Diaper" if young else "Brushing")
         pump(4.2)  # Complete this animation naturally
-        saw("brushed!")
+        saw("diaper!" if young else "brushed!")
         send(b"\r")
         send(b"\x0c")  # Ctrl+L: Sleep
         send(b"\x1b[B\x1b[B\r")
@@ -109,9 +115,9 @@ tamagotchi:
         assert os.waitstatus_to_exitcode(status) == 0, f"Exit status: {status}"
         assert b"DATA RACE" not in output, "Go race detector reported a race"
         saved = save.read_text()
-        for expected in ("speed_percent: 50", "cleanliness: 100", "grooming: 100", "hunger: 0", "health: 70"):
+        for expected in ("speed_percent: 50", "cleanliness: 100", f"{care_field}: 100", "hunger: 0", "health: 70"):
             assert expected in saved, f"Missing saved state: {expected}\n{saved}"
-        print("PTY smoke test passed: wash, brushing, sleep, speed, feeding, overfeeding, quit and save.")
+        print(f"PTY smoke test passed ({pet_stage}): wash, {care_field}, sleep, speed, feeding, overfeeding, quit and save.")
     finally:
         if not exited:
             try:

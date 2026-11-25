@@ -3,7 +3,7 @@ package app
 // Health itself is excluded: a sick pet can recover if its needs are met.
 // Hunger is inverted: 60 hunger means 40% of its need for food is still met.
 func needsMet(t Tamagotchi) bool {
-	return t.IsAlive && t.Hunger <= 60 && t.Happiness >= 40 && t.Energy >= 40 && t.Cleanliness >= 40 && t.Grooming >= 40
+	return t.IsAlive && t.Hunger <= 60 && t.Happiness >= 40 && t.Energy >= 40 && t.Cleanliness >= 40 && ageCareLevel(t) >= 40
 }
 
 func (a *App) resetRecoveryIfNeededLocked() {

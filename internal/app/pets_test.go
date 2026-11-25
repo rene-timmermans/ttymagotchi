@@ -106,32 +106,84 @@ func TestSpeciesPersistAndRandomNewPets(t *testing.T) {
 	}
 }
 
-func TestGrowthAndBrushingAtEveryAge(t *testing.T) {
+func TestAgeAppropriateCareAtEveryStage(t *testing.T) {
 	for i, stage := range growthStages {
 		a := testApp(t)
 		p := a.currentTamagotchi
 		p.Age = growthDays[i]
 		a.updateStageLocked(p.Stage)
-		if p.Stage != stage {
-			t.Fatalf("wrong stage on day %d", p.Age)
+		if p.Stage != stage || needsDiaper(*p) != (i < 3) {
+			t.Fatalf("wrong care/stage on day %d", p.Age)
 		}
 		p.Grooming = 0
+		p.Diaper = 0
 		if needsMet(*p) || hygieneLevel(*p) != 0 {
-			t.Fatal("neglected brushing ignored")
+			t.Fatal("active neglected care ignored")
 		}
-		a.startCare("brush", 0)
+		a.generateStatusList(a.viewsList["status"])
+		a.generateHygieneList(a.viewsList["hygiene"])
+		expected, absent, kind, invalid := "Brushing", "Diaper", "brush", "diaper"
+		if i < 3 {
+			expected, absent, kind, invalid = "Diaper", "Brushing", "diaper", "brush"
+		}
+		for _, list := range []string{"status", "hygiene"} {
+			text := ""
+			for row := 0; row < a.viewsList[list].GetItemCount(); row++ {
+				main, _ := a.viewsList[list].GetItemText(row)
+				text += main + "\n"
+			}
+			if !strings.Contains(text, expected+": ") || strings.Contains(text, absent+": ") {
+				t.Fatalf("%s wrong bars at %s", list, stage)
+			}
+		}
+		a.startCare(invalid, 0)
+		if a.activity != nil {
+			t.Fatal("wrong age action allowed")
+		}
+		a.startCare(kind, 0)
 		if a.activity == nil {
-			t.Fatalf("brushing unavailable at %s", stage)
+			t.Fatalf("active care missing at %s", stage)
 		}
 		a.finishCare()
-		if p.Grooming != 100 || p.GroomTicks != 0 {
-			t.Fatal("brushing did not restore coat")
+		if ageCareLevel(*p) != 100 || !needsMet(*p) || hygieneLevel(*p) != 100 {
+			t.Fatal("active care not restored, or inactive care still counts")
 		}
+	}
+}
+
+func TestDiaperToBrushingTransition(t *testing.T) {
+	a := testApp(t)
+	p := a.currentTamagotchi
+	p.Stage = "baby"
+	p.Created = time.Now().Add(-3 * 24 * time.Hour)
+	p.Diaper = 0
+	p.Grooming = 0
+	p.GroomTicks = 20
+	p.Hunger = 0
+	a.startCare("diaper", 0)
+	a.advanceTime(a.updateInterval)
+	if p.Stage != "toddler" || p.Health != 100 || p.Grooming != 100 || p.GroomTicks != 1 {
+		t.Fatal("transition retained obsolete care debt")
+	}
+	a.finishCare()
+	if p.Diaper != 0 || p.LastChange.IsZero() == false {
+		t.Fatal("stale diaper action committed after growth")
+	}
+	a.closeActivity()
+	a.advanceTime(19 * a.updateInterval)
+	if p.Grooming != 100 || p.GroomTicks != 20 {
+		t.Fatal("brushing decreased too soon")
+	}
+	a.advanceTime(a.updateInterval)
+	if p.Grooming != 99 {
+		t.Fatal("brushing did not use slow decay")
 	}
 }
 
 func TestBrushingDecaysSlowlyAndPersists(t *testing.T) {
 	a := testApp(t)
+	a.currentTamagotchi.Stage = "adult"
+	a.currentTamagotchi.Created = time.Now().Add(-14 * 24 * time.Hour)
 	p := a.currentTamagotchi
 	p.Hunger = 0
 	a.advanceTime(20 * a.updateInterval)
@@ -193,5 +245,45 @@ func TestLargePetsAndControlsFitStandardTerminal(t *testing.T) {
 			}
 			a.closeActivity()
 		}
+	}
+}
+
+func TestAgeSpecificCarePersistsWithoutResettingPet(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	a := testApp(t)
+	a.Config = cfg
+	p := a.currentTamagotchi
+	p.Name = "Saved name"
+	p.Stage = "baby"
+	p.Created = time.Now().Add(-2 * 24 * time.Hour)
+	p.Species = "rabbit"
+	p.Diaper = 37
+	p.Grooming = 0
+	p.Health = 70
+	a.updateConfigFromState()
+	cfg.App.LastLogin = time.Now()
+	if err := config.SaveConfig(cfg); err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := config.LoadConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	loaded.App.CurrentLogin = loaded.App.LastLogin
+	b := testApp(t)
+	b.Config = loaded
+	b.initializeStateFromConfig()
+	pet := b.currentTamagotchi
+	if pet.Name != "Saved name" || pet.Species != "rabbit" || pet.Health != 70 || pet.Diaper != 37 || ageCareLabel(*pet) != "Diaper" {
+		t.Fatal("reload changed saved pet or active care")
+	}
+	pet.Created = time.Now().Add(-3 * 24 * time.Hour)
+	b.advanceTime(b.updateInterval)
+	if ageCareLabel(*pet) != "Brushing" || pet.Grooming != 100 || pet.Diaper != 37 || pet.Name != "Saved name" || pet.Health != 70 {
+		t.Fatal("growth reset the pet or retained obsolete care")
 	}
 }

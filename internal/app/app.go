@@ -102,6 +102,7 @@ func (a *App) initializeStateFromConfig() {
 	} else {
 		cfg := a.Config.Tamagotchi
 		a.currentTamagotchi = &Tamagotchi{
+			Diaper: cfg.Diaper, LastChange: cfg.LastChange,
 			Species:      cfg.Species,
 			HealthyTicks: cfg.HealthyTicks,
 			Cleanliness:  cfg.Cleanliness, Grooming: cfg.Grooming, GroomTicks: cfg.GroomTicks, CareTicks: cfg.CareTicks, LastWash: cfg.LastWash, LastBrush: cfg.LastBrush,
@@ -268,11 +269,18 @@ func (a *App) applyTickLocked() {
 	if t.CareTicks%3 == 0 {
 		t.Cleanliness = max(0, t.Cleanliness-1)
 	}
-	t.GroomTicks = (t.GroomTicks + 1) % 21
-	if t.GroomTicks == 0 {
-		t.Grooming = max(0, t.Grooming-1)
+	if needsDiaper(*t) {
+		if t.CareTicks%2 == 0 {
+			t.Diaper = max(0, t.Diaper-1)
+		}
+	} else {
+		t.GroomTicks = (t.GroomTicks + 1) % 21
+		if t.GroomTicks == 0 {
+			t.Grooming = max(0, t.Grooming-1)
+		}
 	}
-	if t.Hunger >= 80 || t.Cleanliness <= 20 || t.Grooming <= 20 || t.Energy < 20 {
+
+	if t.Hunger >= 80 || t.Cleanliness <= 20 || ageCareLevel(*t) <= 20 || t.Energy < 20 {
 		t.Happiness = max(0, t.Happiness-1)
 	}
 	damage := 0
@@ -280,7 +288,7 @@ func (a *App) applyTickLocked() {
 		damage += 2
 	}
 	damage += hygieneDamage(t.Cleanliness)
-	damage += hygieneDamage(t.Grooming)
+	damage += hygieneDamage(ageCareLevel(*t))
 	t.Health = max(0, t.Health-damage)
 	a.checkDeathLocked()
 	if !t.IsAlive {
@@ -302,7 +310,12 @@ func (a *App) updateStageLocked(previousStage string) {
 			level = i
 		}
 	}
+	wasInDiapers := needsDiaper(*t)
 	t.Stage = growthStages[level]
+	if wasInDiapers && !needsDiaper(*t) {
+		t.Grooming = 100
+		t.GroomTicks = 0
+	}
 
 	if previousStage != a.currentTamagotchi.Stage {
 		a.addGameEvent("EVOLUTION", fmt.Sprintf("Your tamagotchi evolved to %s! 🎉", a.currentTamagotchi.Stage))
@@ -400,6 +413,8 @@ func (a *App) updateConfigFromState() {
 	a.Config.Tamagotchi.Species = t.Species
 	a.Config.Tamagotchi.HealthyTicks = t.HealthyTicks
 	a.Config.Tamagotchi.Cleanliness = t.Cleanliness
+	a.Config.Tamagotchi.Diaper = t.Diaper
+	a.Config.Tamagotchi.LastChange = t.LastChange
 	a.Config.Tamagotchi.Grooming = t.Grooming
 	a.Config.Tamagotchi.GroomTicks = t.GroomTicks
 	a.Config.Tamagotchi.CareTicks = t.CareTicks
@@ -448,7 +463,7 @@ func newDefaultTamagotchi(name string) *Tamagotchi {
 	now := time.Now()
 	return &Tamagotchi{
 		Species:     randomSpecies(),
-		Cleanliness: 100, Grooming: 100,
+		Cleanliness: 100, Diaper: 100, Grooming: 100,
 		Name:      name,
 		Age:       0,
 		Hunger:    50,

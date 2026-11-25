@@ -29,7 +29,26 @@ func growthIndex(stage string) int {
 	}
 	return 0
 }
-func hygieneLevel(t Tamagotchi) int { return min(t.Cleanliness, t.Grooming) }
+func needsDiaper(t Tamagotchi) bool { return growthIndex(t.Stage) < 3 }
+func ageCareLevel(t Tamagotchi) int {
+	if needsDiaper(t) {
+		return t.Diaper
+	}
+	return t.Grooming
+}
+func ageCareLabel(t Tamagotchi) string {
+	if needsDiaper(t) {
+		return "Diaper"
+	}
+	return "Brushing"
+}
+func ageCareKind(t Tamagotchi) string {
+	if needsDiaper(t) {
+		return "diaper"
+	}
+	return "brush"
+}
+func hygieneLevel(t Tamagotchi) int { return min(t.Cleanliness, ageCareLevel(t)) }
 
 func speciesLabel(t Tamagotchi) string {
 	if growthIndex(t.Stage) == 0 {
@@ -201,12 +220,12 @@ func animalPose(t Tamagotchi, kind string, frame int) []string {
 		line = strings.Replace(line, "{b}", emotion.brow, 1)
 		rows[i] = strings.NewReplacer("{e}", eyes, "{m}", mouth, "{b}", emotion.rightBrow()).Replace(line)
 	}
-	if t.IsAlive && (kind == "wash" || kind == "brush") && frame%2 == 1 {
+	if t.IsAlive && (kind == "wash" || kind == "brush" || kind == "diaper") && frame%2 == 1 {
 		for i := range rows {
 			rows[i] = " " + rows[i]
 		}
 	}
-	if t.IsAlive && kind == "brush" {
+	if t.IsAlive && (kind == "brush" || kind == "diaper") {
 		if frame%2 == 0 {
 			rows[len(rows)-1] = strings.ReplaceAll(rows[len(rows)-1], "_", "/")
 		} else {
@@ -268,7 +287,7 @@ func eggPose(t Tamagotchi, kind string, frame int) []string {
 		`    \    .  .      /`,
 		`     '------------'`,
 	}
-	if (kind == "wash" || kind == "brush") && frame%2 == 1 {
+	if (kind == "wash" || kind == "brush" || kind == "diaper") && frame%2 == 1 {
 		for i := range rows {
 			rows[i] = " " + rows[i]
 		}
