@@ -7,15 +7,22 @@ Based on upstream v0.2.0. Source: `/home/deck/Documenten/Codex/Termagotchi`.
 - Happiness, health and weight loss scale with the number of successful rounds. Completing a game spends its listed energy even on a zero score. The list shows maximum rewards.
 - Esc cancels an unfinished game without changing stats. Enter or Esc closes the result. Ctrl+C exits and saves normally.
 - Feeding shows a three-second animation with approaching food, chewing and a result showing stat changes. Esc skips to the result; each meal is applied exactly once.
-- Existing save files and passive time progression remain compatible.
+- Sleep now animates closed eyes and moving Zzz; baths and diaper changes have their own animations. Esc skips each animation and applies its result once.
+- Ctrl+Y opens Hygiene. Cleanliness and diaper freshness decay independently. At 20% and below each causes 1–5 health damage per decay tick, increasing toward zero. The overall Hygiene bar shows the lowest need. Washing restores cleanliness; changing restores diaper freshness. These stop neglect damage but do not directly heal existing damage.
+- Excess nutrition damages health by half the excess (minimum 5). Feeding at hunger 0 therefore always causes damage. Hunger at 90 or higher causes 2 health damage per decay tick. Health 0 immediately means death, which ordinary care cannot reverse.
+- Ctrl+O opens Options. Left/Right or +/- adjusts speed by 1%, Page Up/Down by 10%; Enter selects a preset. Speed 0% means one week, 50% (default) eight hours, and 100% five minutes for hunger 0 → 100. Intermediate values use a smooth geometric scale. Energy, hygiene and neglect scale with this speed; animations remain short. Offline time counts at the saved speed.
+- Settings save immediately. Hygiene values, care timestamps and fractional decay progress persist. Older saves start with clean hygiene and 50% speed; existing pet stats are preserved.
 
 Build and install for this user:
 
 ```sh
-go test ./...
+go test -race ./...
+go vet ./...
 go build -o bin/termagotchi ./cmd/termagotchi
 install -Dm755 bin/termagotchi /home/deck/.local/bin/termagotchi
 ```
+
+The end-to-end terminal check uses an isolated save: `python3 scripts/smoke_test.py bin/termagotchi`.
 
 Run `termagotchi` in a new terminal. The user binary takes precedence over the AUR binary; `/usr/bin/termagotchi` still runs the original version. Avoid running both against the same save at once.
 

@@ -130,8 +130,12 @@ func (a *App) activityInput(event *tcell.EventKey) *tcell.EventKey {
 	now := time.Now()
 	a.tickActivity(now)
 	if event.Key() == tcell.KeyEscape {
-		if g.kind == "food" && g.phase != "result" {
+		if isCare(g.kind) && g.phase != "result" {
+			a.finishCare()
+			a.renderActivity(now)
+		} else if g.kind == "food" && g.phase != "result" {
 			a.finishFeeding()
+			a.renderActivity(now)
 		} else {
 			a.closeActivity()
 		}
@@ -200,11 +204,19 @@ func (a *App) finishFeeding() {
 	a.feedTamagotchi(g.index)
 	after, _ := a.tamagotchiSnapshot()
 	g.phase = "result"
-	if !after.IsAlive {
+	if !before.IsAlive {
 		g.message = "Your pet cannot eat right now."
 		return
 	}
-	g.message = fmt.Sprintf("Yum! Hunger %d → %d | Happiness %d → %d\nEnergy %d → %d", before.Hunger, after.Hunger, before.Happiness, after.Happiness, before.Energy, after.Energy)
+	g.message = fmt.Sprintf("Hunger %d → %d | Happiness %d → %d\nEnergy %d → %d | Health %d → %d", before.Hunger, after.Hunger, before.Happiness, after.Happiness, before.Energy, after.Energy, before.Health, after.Health)
+	if after.Health < before.Health {
+		g.message = "Overfed! Your pet feels sick.\n" + g.message
+	} else {
+		g.message = "Yum! " + g.message
+	}
+	if !after.IsAlive {
+		g.message += "\nYour tamagotchi has passed away..."
+	}
 }
 
 func (a *App) tickActivity(now time.Time) {
@@ -212,7 +224,11 @@ func (a *App) tickActivity(now time.Time) {
 	if g == nil {
 		return
 	}
-	if g.kind == "food" {
+	if isCare(g.kind) {
+		if g.phase != "result" && now.Sub(g.started) >= 4*time.Second {
+			a.finishCare()
+		}
+	} else if g.kind == "food" {
 		if g.phase != "result" && now.Sub(g.started) >= 3*time.Second {
 			a.finishFeeding()
 		}
@@ -241,7 +257,24 @@ func (a *App) renderActivity(now time.Time) {
 	t, _ := a.tamagotchiSnapshot()
 	title, body, hint := "", "", "Esc: cancel • Ctrl+C: quit"
 	sprite := renderTamagotchiSprite(t)
-	if g.kind == "food" {
+	if isCare(g.kind) {
+		hint = "Esc: skip animation • Ctrl+C: quit"
+		frame := int(now.Sub(g.started) / (350 * time.Millisecond))
+		switch g.kind {
+		case "sleep":
+			title = sleepOptions[g.index].Name
+			sprite = careSprite(t)
+			body = strings.Repeat(" ", frame%4) + strings.Repeat("Z", 1+frame%4) + "zzz...\nSleeping peacefully..."
+		case "wash":
+			title = "A bubbly bath"
+			bubbles := []string{"o   O   o", " O o   O ", "o  o O  o"}
+			body = bubbles[frame%3] + "\n~~~~~ splash! ~~~~~\nWashing away the dirt..."
+		case "change":
+			title = "A fresh diaper"
+			steps := []string{"Taking off the old diaper...", "Wipe, wipe...", "A clean diaper...", "All snug and fresh!"}
+			body = "✧ " + steps[min(3, frame/3)] + " ✧"
+		}
+	} else if g.kind == "food" {
 		title = availableFoods[g.index].Name
 		hint = "Esc: skip animation • Ctrl+C: quit"
 		elapsed := now.Sub(g.started)
@@ -319,8 +352,13 @@ func (a *App) renderActivity(now time.Time) {
 		title += fmt.Sprintf(" • Round %d/3 • Score %d", min(3, g.round+1), g.score)
 	}
 	if g.phase == "result" {
+		sprite = renderTamagotchiSprite(t)
 		body = "[green]All done![-]\n\n" + tview.Escape(g.message)
-		if g.kind == "food" {
+		if g.kind == "food" && t.IsAlive && strings.Contains(g.message, "Overfed") {
+			t.Happiness = 0
+			sprite = renderTamagotchiSprite(t)
+		}
+		if g.kind == "food" && t.IsAlive && !strings.Contains(g.message, "Overfed") {
 			t.Happiness = 100
 			sprite = renderTamagotchiSprite(t)
 		}

@@ -11,7 +11,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-const defaultUpdateInterval = 30 * time.Second
+const defaultUpdateInterval = 8 * time.Hour / 100
 
 // App contains the tview application, the layout for the display, and the loaded config
 type App struct {
@@ -46,7 +46,7 @@ func NewApp(cfg *config.Config) *App {
 		Config:         cfg,
 		viewsList:      make(map[string]*tview.List),
 		gameEvents:     make([]GameEvent, 0),
-		updateInterval: defaultUpdateInterval,
+		updateInterval: hungerDuration(cfg.App.SpeedPercent) / 100,
 	}
 
 	app.initializeStateFromConfig()
@@ -56,7 +56,7 @@ func NewApp(cfg *config.Config) *App {
 	layout := tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(pages, 0, 1, true).
-		AddItem(info, 1, 1, false)
+		AddItem(info, 3, 1, false)
 
 	app.TApp.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if app.activity != nil {
@@ -73,6 +73,10 @@ func NewApp(cfg *config.Config) *App {
 			app.goToSection(playSection, info)
 		case tcell.KeyCtrlL:
 			app.goToSection(sleepSection, info)
+		case tcell.KeyCtrlY:
+			app.goToSection(hygieneSection, info)
+		case tcell.KeyCtrlO:
+			app.goToSection(optionsSection, info)
 		case tcell.KeyCtrlE:
 			app.goToSection(eventsSection, info)
 		case tcell.KeyCtrlR:
@@ -96,6 +100,7 @@ func (a *App) initializeStateFromConfig() {
 	} else {
 		cfg := a.Config.Tamagotchi
 		a.currentTamagotchi = &Tamagotchi{
+			Cleanliness: cfg.Cleanliness, Diaper: cfg.Diaper, CareTicks: cfg.CareTicks, LastWash: cfg.LastWash, LastChange: cfg.LastChange,
 			Name:      cfg.Name,
 			Age:       cfg.Age,
 			Hunger:    cfg.Hunger,
@@ -112,6 +117,8 @@ func (a *App) initializeStateFromConfig() {
 		}
 	}
 
+	a.timeAccumulator = maxDuration(0, minDuration(a.updateInterval-1, a.Config.App.TickRemainder))
+	a.checkDeathLocked()
 	a.applyOfflineProgress()
 }
 
@@ -246,23 +253,26 @@ func (a *App) applyTickLocked() {
 
 	t := a.currentTamagotchi
 
-	t.Hunger = min(100, t.Hunger+5)
-
-	if t.Hunger > 80 {
-		t.Happiness = max(0, t.Happiness-2)
+	t.Hunger = min(100, t.Hunger+1)
+	t.Energy = max(0, t.Energy-1)
+	t.CareTicks = (t.CareTicks + 1) % 6
+	if t.CareTicks%3 == 0 {
+		t.Cleanliness = max(0, t.Cleanliness-1)
 	}
-
-	t.Energy = max(0, t.Energy-3)
-
-	if t.Hunger > 90 || t.Happiness < 10 {
-		t.Health = max(0, t.Health-1)
+	if t.CareTicks%2 == 0 {
+		t.Diaper = max(0, t.Diaper-1)
 	}
-
-	if t.Health <= 0 {
-		if t.IsAlive {
-			t.IsAlive = false
-			a.addGameEvent("DEATH", "Your tamagotchi has passed away... 💔")
-		}
+	if t.Hunger >= 80 {
+		t.Happiness = max(0, t.Happiness-1)
+	}
+	damage := 0
+	if t.Hunger >= 90 {
+		damage += 2
+	}
+	damage += hygieneDamage(t.Cleanliness) + hygieneDamage(t.Diaper)
+	t.Health = max(0, t.Health-damage)
+	a.checkDeathLocked()
+	if !t.IsAlive {
 		return
 	}
 
@@ -357,6 +367,12 @@ func (a *App) refreshUI() {
 		if list := a.viewsList["sleep"]; list != nil {
 			a.generateSleepList(list)
 		}
+		if list := a.viewsList["hygiene"]; list != nil {
+			a.generateHygieneList(list)
+		}
+		if list := a.viewsList["options"]; list != nil {
+			a.generateOptionsList(list)
+		}
 		if list := a.viewsList["events"]; list != nil {
 			a.generateEventsList(list)
 		}
@@ -372,6 +388,14 @@ func (a *App) updateConfigFromState() {
 	t := *a.currentTamagotchi
 	a.stateMu.RUnlock()
 
+	a.stateMu.RLock()
+	a.Config.App.TickRemainder = a.timeAccumulator
+	a.stateMu.RUnlock()
+	a.Config.Tamagotchi.Cleanliness = t.Cleanliness
+	a.Config.Tamagotchi.Diaper = t.Diaper
+	a.Config.Tamagotchi.CareTicks = t.CareTicks
+	a.Config.Tamagotchi.LastWash = t.LastWash
+	a.Config.Tamagotchi.LastChange = t.LastChange
 	a.Config.Tamagotchi.Name = t.Name
 	a.Config.Tamagotchi.Age = t.Age
 	a.Config.Tamagotchi.Hunger = t.Hunger
@@ -414,6 +438,7 @@ func (a *App) eventsSnapshot() []GameEvent {
 func newDefaultTamagotchi(name string) *Tamagotchi {
 	now := time.Now()
 	return &Tamagotchi{
+		Cleanliness: 100, Diaper: 100,
 		Name:      name,
 		Age:       0,
 		Hunger:    50,
@@ -492,6 +517,30 @@ func min(a, b int) int {
 }
 
 func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+// Call while holding stateMu, or before starting the game loop.
+func (a *App) checkDeathLocked() {
+	t := a.currentTamagotchi
+	if t != nil && t.Health <= 0 {
+		t.Health = 0
+		if t.IsAlive {
+			t.IsAlive = false
+			a.addGameEvent("DEATH", "Your tamagotchi has passed away... 💔")
+		}
+	}
+}
+func minDuration(a, b time.Duration) time.Duration {
+	if a < b {
+		return a
+	}
+	return b
+}
+func maxDuration(a, b time.Duration) time.Duration {
 	if a > b {
 		return a
 	}

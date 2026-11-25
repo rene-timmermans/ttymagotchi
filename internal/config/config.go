@@ -14,25 +14,32 @@ type Config struct {
 }
 
 type AppConfig struct {
-	LastLogin     time.Time `yaml:"last_login"`
-	CurrentLogin  time.Time `yaml:"current_login"`
-	SaveDirectory string    `yaml:"save_directory"`
+	SpeedPercent  int           `yaml:"speed_percent"`
+	TickRemainder time.Duration `yaml:"tick_remainder_ns"`
+	LastLogin     time.Time     `yaml:"last_login"`
+	CurrentLogin  time.Time     `yaml:"current_login"`
+	SaveDirectory string        `yaml:"save_directory"`
 }
 
 type TamagotchiConfig struct {
-	Name      string    `yaml:"name"`
-	Age       int       `yaml:"age"`
-	Hunger    int       `yaml:"hunger"`    // 0-100, 0 = full, 100 = starving
-	Happiness int       `yaml:"happiness"` // 0-100, 0 = very sad, 100 = very happy
-	Health    int       `yaml:"health"`    // 0-100, 0 = sick, 100 = healthy
-	Energy    int       `yaml:"energy"`    // 0-100, 0 = tired, 100 = energetic
-	Weight    float64   `yaml:"weight"`    // in grams
-	Stage     string    `yaml:"stage"`     // egg, baby, child, teen, adult
-	Created   time.Time `yaml:"created"`
-	LastFed   time.Time `yaml:"last_fed"`
-	LastPlay  time.Time `yaml:"last_play"`
-	LastSleep time.Time `yaml:"last_sleep"`
-	IsAlive   bool      `yaml:"is_alive"`
+	Cleanliness int       `yaml:"cleanliness"`
+	Diaper      int       `yaml:"diaper"`
+	CareTicks   int       `yaml:"care_ticks"`
+	LastWash    time.Time `yaml:"last_wash"`
+	LastChange  time.Time `yaml:"last_change"`
+	Name        string    `yaml:"name"`
+	Age         int       `yaml:"age"`
+	Hunger      int       `yaml:"hunger"`    // 0-100, 0 = full, 100 = starving
+	Happiness   int       `yaml:"happiness"` // 0-100, 0 = very sad, 100 = very happy
+	Health      int       `yaml:"health"`    // 0-100, 0 = dead, 100 = healthy
+	Energy      int       `yaml:"energy"`    // 0-100, 0 = tired, 100 = energetic
+	Weight      float64   `yaml:"weight"`    // in grams
+	Stage       string    `yaml:"stage"`     // egg, baby, child, teen, adult
+	Created     time.Time `yaml:"created"`
+	LastFed     time.Time `yaml:"last_fed"`
+	LastPlay    time.Time `yaml:"last_play"`
+	LastSleep   time.Time `yaml:"last_sleep"`
+	IsAlive     bool      `yaml:"is_alive"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -50,10 +57,12 @@ func LoadConfig() (*Config, error) {
 
 	cfg := &Config{
 		App: AppConfig{
+			SpeedPercent:  50,
 			CurrentLogin:  time.Now(),
 			SaveDirectory: appConfigDir,
 		},
 		Tamagotchi: TamagotchiConfig{
+			Cleanliness: 100, Diaper: 100,
 			Name:      "Tammy",
 			Age:       0,
 			Hunger:    50,
@@ -79,6 +88,14 @@ func LoadConfig() (*Config, error) {
 		if err := yaml.Unmarshal(data, cfg); err != nil {
 			return nil, err
 		}
+	}
+
+	cfg.App.SpeedPercent = max(0, min(100, cfg.App.SpeedPercent))
+	cfg.Tamagotchi.Cleanliness = max(0, min(100, cfg.Tamagotchi.Cleanliness))
+	cfg.Tamagotchi.Diaper = max(0, min(100, cfg.Tamagotchi.Diaper))
+	if cfg.Tamagotchi.Health <= 0 {
+		cfg.Tamagotchi.Health = 0
+		cfg.Tamagotchi.IsAlive = false
 	}
 
 	// Update current login time

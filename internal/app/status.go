@@ -9,6 +9,7 @@ import (
 )
 
 func (a *App) generateStatusList(listStatus *tview.List) {
+	defer preserveSelection(listStatus)()
 	listStatus.Clear()
 
 	t, ok := a.tamagotchiSnapshot()
@@ -22,6 +23,9 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 
 	// Status header
 	status := "🟢 Alive"
+	if t.Health <= 40 {
+		status = "🤒 Sick — needs care"
+	}
 	if !t.IsAlive {
 		status = "🔴 Dead"
 	}
@@ -76,6 +80,10 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 		energyColor = "😪"
 	}
 	listStatus.AddItem(fmt.Sprintf("Energy: %s %s", energyColor, energyBar), "", 0, nil)
+
+	listStatus.AddItem("Hygiene: "+a.createProgressBar(min(t.Cleanliness, t.Diaper), 100), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf("Cleanliness: %s", a.createProgressBar(t.Cleanliness, 100)), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf("Fresh diaper: %s", a.createProgressBar(t.Diaper, 100)), "", 0, nil)
 
 	// Last actions
 	listStatus.AddItem("", "", 0, nil) // Empty line
@@ -172,7 +180,7 @@ func spriteMood(happiness, health, energy int, alive bool) string {
 	switch {
 	case happiness > 75 && health > 75 && energy > 60:
 		return "happy"
-	case happiness < 25 || health < 25 || energy < 20:
+	case happiness < 25 || health <= 40 || energy < 20:
 		return "sad"
 	default:
 		return "neutral"

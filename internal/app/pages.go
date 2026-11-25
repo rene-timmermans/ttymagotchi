@@ -6,12 +6,14 @@ import (
 )
 
 const (
-	statusSection = "Status"
-	feedSection   = "Feed"
-	playSection   = "Play"
-	sleepSection  = "Sleep"
-	eventsSection = "Events"
-	helpSection   = "Help"
+	statusSection  = "Status"
+	feedSection    = "Feed"
+	playSection    = "Play"
+	sleepSection   = "Sleep"
+	hygieneSection = "Hygiene"
+	optionsSection = "Options"
+	eventsSection  = "Events"
+	helpSection    = "Help"
 )
 
 func (a *App) getPagesInfo() (tview.Primitive, tview.Primitive) {
@@ -36,10 +38,15 @@ func (a *App) getPagesInfo() (tview.Primitive, tview.Primitive) {
 	_, helpContent := a.helpPage()
 	pages.AddPage(helpSection, helpContent, true, false)
 
+	_, hygieneContent := a.hygienePage()
+	pages.AddPage(hygieneSection, hygieneContent, true, false)
+	_, optionsContent := a.optionsPage()
+	pages.AddPage(optionsSection, optionsContent, true, false)
+
 	// Info bar
 	info := tview.NewTextView().
 		SetDynamicColors(true).
-		SetText("Ctrl+S: Status | Ctrl+F: Feed | Ctrl+P: Play | Ctrl+L: Sleep | Ctrl+E: Events | Ctrl+H: Help | Ctrl+R: Restart | Ctrl+C: Quit")
+		SetText("Ctrl+S Status | Ctrl+F Feed | Ctrl+P Play | Ctrl+L Sleep\nCtrl+Y Hygiene | Ctrl+O Options | Ctrl+E Events\nCtrl+H Help | Ctrl+R Restart | Ctrl+C Quit")
 
 	return pages, info
 }

@@ -27,6 +27,7 @@ var availableGames = []Game{
 }
 
 func (a *App) generatePlayList(listPlay *tview.List) {
+	defer preserveSelection(listPlay)()
 	listPlay.Clear()
 
 	t, ok := a.tamagotchiSnapshot()

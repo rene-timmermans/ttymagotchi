@@ -7,6 +7,7 @@ import (
 )
 
 func (a *App) generateEventsList(listEvents *tview.List) {
+	defer preserveSelection(listEvents)()
 	listEvents.Clear()
 
 	events := a.eventsSnapshot()

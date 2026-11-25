@@ -23,6 +23,7 @@ var sleepOptions = []SleepOption{
 }
 
 func (a *App) generateSleepList(listSleep *tview.List) {
+	defer preserveSelection(listSleep)()
 	listSleep.Clear()
 
 	t, ok := a.tamagotchiSnapshot()
@@ -47,7 +48,7 @@ func (a *App) generateSleepList(listSleep *tview.List) {
 				sleep.Name, sleep.EnergyGain, sleep.HealthGain, sleep.Happiness),
 			"",
 			0,
-			func() { a.putTamagotchiToSleep(sleepIndex) },
+			func() { a.startCare("sleep", sleepIndex) },
 		)
 	}
 

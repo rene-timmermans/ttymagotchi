@@ -19,6 +19,7 @@ var availableFoods = []Food{
 }
 
 func (a *App) generateFeedList(listFeed *tview.List) {
+	defer preserveSelection(listFeed)()
 	listFeed.Clear()
 
 	t, ok := a.tamagotchiSnapshot()
@@ -33,6 +34,7 @@ func (a *App) generateFeedList(listFeed *tview.List) {
 		return
 	}
 
+	listFeed.AddItem("Overfeeding damages health. At hunger 0, do not feed!", "", 0, nil)
 	listFeed.AddItem("=== AVAILABLE FOOD ===", "", 0, nil)
 	listFeed.AddItem("", "", 0, nil) // Empty line
 
@@ -50,6 +52,7 @@ func (a *App) generateFeedList(listFeed *tview.List) {
 	listFeed.AddItem("", "", 0, nil) // Empty line
 	listFeed.AddItem("=== FEEDING INFO ===", "", 0, nil)
 	listFeed.AddItem(fmt.Sprintf("Current Hunger: %d/100", t.Hunger), "", 0, nil)
+	listFeed.AddItem(fmt.Sprintf("Current Health: %d/100", t.Health), "", 0, nil)
 	listFeed.AddItem(fmt.Sprintf("Current Weight: %.1f grams", t.Weight), "", 0, nil)
 	listFeed.AddItem(fmt.Sprintf("Last Fed: %s", t.LastFed.Format("15:04")), "", 0, nil)
 }
@@ -68,15 +71,22 @@ func (a *App) feedTamagotchi(foodIndex int) {
 		return
 	}
 
+	damage := 0
+	excess := food.Nutrition - a.currentTamagotchi.Hunger
+	if excess > 0 {
+		damage = max(5, excess/2)
+		a.currentTamagotchi.Health = max(0, a.currentTamagotchi.Health-damage)
+	}
 	a.currentTamagotchi.Hunger = max(0, a.currentTamagotchi.Hunger-food.Nutrition)
 	a.currentTamagotchi.Happiness = min(100, a.currentTamagotchi.Happiness+food.Happiness)
 	a.currentTamagotchi.Energy = min(100, a.currentTamagotchi.Energy+food.Energy)
 	a.currentTamagotchi.Weight += food.WeightGain
 	a.currentTamagotchi.LastFed = now
+	a.checkDeathLocked()
 	a.stateMu.Unlock()
 
 	a.updateConfigFromState()
-	a.addGameEvent("FEED", fmt.Sprintf("Fed %s! Hunger -%d, Happiness +%d", food.Name, food.Nutrition, food.Happiness))
+	a.addGameEvent("FEED", fmt.Sprintf("Fed %s! Hunger -%d, Happiness +%d, Health -%d", food.Name, food.Nutrition, food.Happiness, damage))
 }
 
 func (a *App) feedPage() (title string, content tview.Primitive) {
