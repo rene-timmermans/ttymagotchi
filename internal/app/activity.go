@@ -259,36 +259,28 @@ func (a *App) renderActivity(now time.Time) {
 	sprite := renderTamagotchiSprite(t)
 	if isCare(g.kind) {
 		hint = "Esc: skip animation • Ctrl+C: quit"
-		frame := int(now.Sub(g.started) / (350 * time.Millisecond))
+		sprite = renderActionSprite(t, g.kind, g.index, now.Sub(g.started))
 		switch g.kind {
 		case "sleep":
 			title = sleepOptions[g.index].Name
-			sprite = careSprite(t)
-			body = strings.Repeat(" ", frame%4) + strings.Repeat("Z", 1+frame%4) + "zzz...\nSleeping peacefully..."
+			body = "Sleeping peacefully..."
 		case "wash":
 			title = "A bubbly bath"
-			bubbles := []string{"o   O   o", " O o   O ", "o  o O  o"}
-			body = bubbles[frame%3] + "\n~~~~~ splash! ~~~~~\nWashing away the dirt..."
+			body = "Washing away the dirt..."
 		case "change":
 			title = "A fresh diaper"
-			steps := []string{"Taking off the old diaper...", "Wipe, wipe...", "A clean diaper...", "All snug and fresh!"}
-			body = "✧ " + steps[min(3, frame/3)] + " ✧"
+			body = "Changing the diaper..."
 		}
 	} else if g.kind == "food" {
 		title = availableFoods[g.index].Name
 		hint = "Esc: skip animation • Ctrl+C: quit"
-		elapsed := now.Sub(g.started)
-		if elapsed < 1500*time.Millisecond {
-			gap := max(0, 12-int(elapsed/(125*time.Millisecond)))
-			icon := strings.Fields(availableFoods[g.index].Name)[0]
-			body = icon + strings.Repeat(" ", gap) + " →\nDinner is coming!"
+		sprite = renderActionSprite(t, g.kind, g.index, now.Sub(g.started))
+		if now.Sub(g.started) < 1500*time.Millisecond {
+			body = "Dinner is coming!"
 		} else {
-			if int(elapsed/(250*time.Millisecond))%2 == 0 {
-				body = "( ^ o ^ )\nMunch!"
-			} else {
-				body = "( ^ - ^ )\nNom nom..."
-			}
+			body = "Munch!"
 		}
+
 	} else {
 		title = availableGames[g.index].Name
 		switch g.kind {

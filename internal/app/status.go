@@ -116,13 +116,27 @@ func (a *App) updateSpriteView(view *tview.TextView) {
 
 func (a *App) createProgressBar(current, max int) string {
 	const barLength = 20
-	filled := (current * barLength) / max
-	if filled > barLength {
-		filled = barLength
+	if max <= 0 {
+		return "[0%] " + strings.Repeat("░", barLength)
 	}
-
-	bar := strings.Repeat("█", filled) + strings.Repeat("░", barLength-filled)
-	return fmt.Sprintf("[%d%%] %s", current, bar)
+	if current < 0 {
+		current = 0
+	}
+	if current > max {
+		current = max
+	}
+	eighths := current * barLength * 8 / max
+	full, fraction := eighths/8, eighths%8
+	bar := strings.Repeat("█", full)
+	if fraction > 0 {
+		bar += []string{"", "▏", "▎", "▍", "▌", "▋", "▊", "▉"}[fraction]
+	}
+	empty := barLength - full
+	if fraction > 0 {
+		empty--
+	}
+	bar += strings.Repeat("░", empty)
+	return fmt.Sprintf("[%d%%] %s", current*100/max, bar)
 }
 
 func (a *App) statusPage() (title string, content tview.Primitive) {

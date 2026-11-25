@@ -69,14 +69,14 @@ tamagotchi:
         saw("Squeaky")
         send(b"\r")
         send(b"\x1b[B\r")  # Select the next item: change diaper
-        saw("Taking")
+        saw("Changing")
         pump(4.2)  # Complete this animation naturally
         saw("Freshness")
         send(b"\r")
         send(b"\x0c")  # Ctrl+L: Sleep
         send(b"\x1b[B\x1b[B\r")
         saw("Sleeping")
-        saw("zzz...")
+        saw("Zzz")
         send(b"\x1b")
         pump(0.6)
         saw("rested!")

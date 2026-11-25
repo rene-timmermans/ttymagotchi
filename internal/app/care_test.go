@@ -179,7 +179,7 @@ func TestSleepEyesClosedForAllStages(t *testing.T) {
 		pet := *newDefaultTamagotchi("Test")
 		pet.Stage = stage
 		pet.Happiness = 100
-		sprite := careSprite(pet)
+		sprite := strings.Join(actionPose(pet, "sleep", 0), "\n")
 		if strings.Contains(sprite, "^") || strings.Contains(sprite, "o o") || strings.Contains(sprite, "o   o") {
 			t.Fatalf("eyes open for %s: %s", stage, sprite)
 		}

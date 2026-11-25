@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/rivo/tview"
@@ -115,13 +114,4 @@ func (a *App) finishCare() {
 		a.updateConfigFromState()
 		a.addGameEvent("HYGIENE", g.message)
 	}
-}
-
-func careSprite(t Tamagotchi) string {
-	sprite := renderTamagotchiSprite(t)
-	// All life stages keep their own silhouette, with closed eyes.
-	for _, eyes := range [][2]string{{"o   o", "-   -"}, {"^   ^", "-   -"}, {"o o", "- -"}, {"^ ^", "- -"}, {"(^^)", "(--)"}, {"(..)", "(--)"}, {"/^^\\", "/--\\"}, {"/..\\", "/--\\"}} {
-		sprite = strings.ReplaceAll(sprite, eyes[0], eyes[1])
-	}
-	return sprite
 }
