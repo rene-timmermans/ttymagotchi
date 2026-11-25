@@ -85,6 +85,8 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 	listStatus.AddItem(fmt.Sprintf("Cleanliness: %s", a.createProgressBar(t.Cleanliness, 100)), "", 0, nil)
 	listStatus.AddItem(fmt.Sprintf("Fresh diaper: %s", a.createProgressBar(t.Diaper, 100)), "", 0, nil)
 
+	listStatus.AddItem(a.recoveryStatus(t), "", 0, nil)
+
 	// Last actions
 	listStatus.AddItem("", "", 0, nil) // Empty line
 	listStatus.AddItem("=== LAST ACTIONS ===", "", 0, nil)

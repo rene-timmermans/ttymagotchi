@@ -22,24 +22,25 @@ type AppConfig struct {
 }
 
 type TamagotchiConfig struct {
-	Cleanliness int       `yaml:"cleanliness"`
-	Diaper      int       `yaml:"diaper"`
-	CareTicks   int       `yaml:"care_ticks"`
-	LastWash    time.Time `yaml:"last_wash"`
-	LastChange  time.Time `yaml:"last_change"`
-	Name        string    `yaml:"name"`
-	Age         int       `yaml:"age"`
-	Hunger      int       `yaml:"hunger"`    // 0-100, 0 = full, 100 = starving
-	Happiness   int       `yaml:"happiness"` // 0-100, 0 = very sad, 100 = very happy
-	Health      int       `yaml:"health"`    // 0-100, 0 = dead, 100 = healthy
-	Energy      int       `yaml:"energy"`    // 0-100, 0 = tired, 100 = energetic
-	Weight      float64   `yaml:"weight"`    // in grams
-	Stage       string    `yaml:"stage"`     // egg, baby, child, teen, adult
-	Created     time.Time `yaml:"created"`
-	LastFed     time.Time `yaml:"last_fed"`
-	LastPlay    time.Time `yaml:"last_play"`
-	LastSleep   time.Time `yaml:"last_sleep"`
-	IsAlive     bool      `yaml:"is_alive"`
+	HealthyTicks int       `yaml:"healthy_ticks"`
+	Cleanliness  int       `yaml:"cleanliness"`
+	Diaper       int       `yaml:"diaper"`
+	CareTicks    int       `yaml:"care_ticks"`
+	LastWash     time.Time `yaml:"last_wash"`
+	LastChange   time.Time `yaml:"last_change"`
+	Name         string    `yaml:"name"`
+	Age          int       `yaml:"age"`
+	Hunger       int       `yaml:"hunger"`    // 0-100, 0 = full, 100 = starving
+	Happiness    int       `yaml:"happiness"` // 0-100, 0 = very sad, 100 = very happy
+	Health       int       `yaml:"health"`    // 0-100, 0 = dead, 100 = healthy
+	Energy       int       `yaml:"energy"`    // 0-100, 0 = tired, 100 = energetic
+	Weight       float64   `yaml:"weight"`    // in grams
+	Stage        string    `yaml:"stage"`     // egg, baby, child, teen, adult
+	Created      time.Time `yaml:"created"`
+	LastFed      time.Time `yaml:"last_fed"`
+	LastPlay     time.Time `yaml:"last_play"`
+	LastSleep    time.Time `yaml:"last_sleep"`
+	IsAlive      bool      `yaml:"is_alive"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -90,6 +91,7 @@ func LoadConfig() (*Config, error) {
 		}
 	}
 
+	cfg.Tamagotchi.HealthyTicks = max(0, min(4, cfg.Tamagotchi.HealthyTicks))
 	cfg.App.SpeedPercent = max(0, min(100, cfg.App.SpeedPercent))
 	cfg.Tamagotchi.Cleanliness = max(0, min(100, cfg.Tamagotchi.Cleanliness))
 	cfg.Tamagotchi.Diaper = max(0, min(100, cfg.Tamagotchi.Diaper))

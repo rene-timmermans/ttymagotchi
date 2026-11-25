@@ -109,6 +109,7 @@ func (a *App) rewardGame(gameIndex, score, total int) string {
 	t.Energy = max(0, t.Energy+game.Energy)
 	t.Weight = maxWeight(10, t.Weight-game.WeightLoss*float64(score)/float64(total))
 	t.LastPlay = time.Now()
+	a.resetRecoveryIfNeededLocked()
 	a.stateMu.Unlock()
 	a.updateConfigFromState()
 	result := fmt.Sprintf("Score %d/%d | Happiness +%d | Health +%d | Energy %d", score, total, happiness, health, game.Energy)

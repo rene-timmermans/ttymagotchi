@@ -85,6 +85,7 @@ func (a *App) putTamagotchiToSleep(sleepIndex int) {
 	a.currentTamagotchi.Health = min(100, a.currentTamagotchi.Health+sleep.HealthGain)
 	a.currentTamagotchi.Happiness = min(100, a.currentTamagotchi.Happiness+sleep.Happiness)
 	a.currentTamagotchi.LastSleep = now
+	a.resetRecoveryIfNeededLocked()
 	a.stateMu.Unlock()
 
 	a.updateConfigFromState()

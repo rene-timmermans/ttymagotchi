@@ -3,24 +3,25 @@ package app
 import "time"
 
 type Tamagotchi struct {
-	Cleanliness int
-	Diaper      int
-	CareTicks   int
-	LastWash    time.Time
-	LastChange  time.Time
-	Name        string
-	Age         int
-	Hunger      int
-	Happiness   int
-	Health      int
-	Energy      int
-	Weight      float64
-	Stage       string
-	Created     time.Time
-	LastFed     time.Time
-	LastPlay    time.Time
-	LastSleep   time.Time
-	IsAlive     bool
+	HealthyTicks int
+	Cleanliness  int
+	Diaper       int
+	CareTicks    int
+	LastWash     time.Time
+	LastChange   time.Time
+	Name         string
+	Age          int
+	Hunger       int
+	Happiness    int
+	Health       int
+	Energy       int
+	Weight       float64
+	Stage        string
+	Created      time.Time
+	LastFed      time.Time
+	LastPlay     time.Time
+	LastSleep    time.Time
+	IsAlive      bool
 }
 
 type GameEvent struct {

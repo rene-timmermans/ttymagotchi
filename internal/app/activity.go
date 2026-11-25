@@ -127,20 +127,12 @@ func (a *App) activityInput(event *tcell.EventKey) *tcell.EventKey {
 	if event.Key() == tcell.KeyCtrlC {
 		return event
 	}
-	now := time.Now()
-	a.tickActivity(now)
-	if event.Key() == tcell.KeyEscape {
-		if isCare(g.kind) && g.phase != "result" {
-			a.finishCare()
-			a.renderActivity(now)
-		} else if g.kind == "food" && g.phase != "result" {
-			a.finishFeeding()
-			a.renderActivity(now)
-		} else {
-			a.closeActivity()
-		}
+	if event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyCtrlS {
+		a.returnToStatus()
 		return nil
 	}
+	now := time.Now()
+	a.tickActivity(now)
 	if g.phase == "result" {
 		if event.Key() == tcell.KeyEnter || event.Rune() == ' ' {
 			a.closeActivity()
@@ -255,10 +247,10 @@ func (a *App) tickActivity(now time.Time) {
 func (a *App) renderActivity(now time.Time) {
 	g := a.activity
 	t, _ := a.tamagotchiSnapshot()
-	title, body, hint := "", "", "Esc: cancel • Ctrl+C: quit"
+	title, body, hint := "", "", "Esc: Status (cancel game) • Ctrl+C: quit"
 	sprite := renderTamagotchiSprite(t)
 	if isCare(g.kind) {
-		hint = "Esc: skip animation • Ctrl+C: quit"
+		hint = "Esc: Status (finish care) • Ctrl+C: quit"
 		sprite = renderActionSprite(t, g.kind, g.index, now.Sub(g.started))
 		switch g.kind {
 		case "sleep":
@@ -273,7 +265,7 @@ func (a *App) renderActivity(now time.Time) {
 		}
 	} else if g.kind == "food" {
 		title = availableFoods[g.index].Name
-		hint = "Esc: skip animation • Ctrl+C: quit"
+		hint = "Esc: Status (finish care) • Ctrl+C: quit"
 		sprite = renderActionSprite(t, g.kind, g.index, now.Sub(g.started))
 		if now.Sub(g.started) < 1500*time.Millisecond {
 			body = "Dinner is coming!"
@@ -354,7 +346,7 @@ func (a *App) renderActivity(now time.Time) {
 			t.Happiness = 100
 			sprite = renderTamagotchiSprite(t)
 		}
-		hint = "Enter / Esc: back • Ctrl+C: quit"
+		hint = "Enter: menu • Esc: Status • Ctrl+C: quit"
 	}
 	g.view.SetText("\n[::b]" + title + "[::-]\n" + sprite + "\n" + body + "\n\n[gray]" + hint + "[-]")
 }

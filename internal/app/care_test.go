@@ -135,6 +135,7 @@ func TestCareAnimationAndSingleCommit(t *testing.T) {
 			pet.Health = 50
 			before := *pet
 			a.startCare(tc.kind, tc.index)
+			g := a.activity
 			a.tickActivity(a.activity.started.Add(time.Second))
 			if *pet != before {
 				t.Fatal("care applied before animation")
@@ -149,7 +150,7 @@ func TestCareAnimationAndSingleCommit(t *testing.T) {
 			}
 			after := *pet
 			a.tickActivity(time.Now().Add(time.Hour))
-			if *pet != after || a.activity.phase != "result" || len(a.gameEvents) != 1 {
+			if *pet != after || g.phase != "result" || len(a.gameEvents) != 1 {
 				t.Fatal("duplicate care")
 			}
 			switch tc.kind {
@@ -166,7 +167,9 @@ func TestCareAnimationAndSingleCommit(t *testing.T) {
 					t.Fatal("wrong sleep effect")
 				}
 			}
-			key(a, tcell.KeyEnter, 0)
+			if a.activity != nil {
+				key(a, tcell.KeyEnter, 0)
+			}
 			if a.activity != nil {
 				t.Fatal("did not return")
 			}

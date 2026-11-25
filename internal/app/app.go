@@ -59,14 +59,16 @@ func NewApp(cfg *config.Config) *App {
 		AddItem(info, 3, 1, false)
 
 	app.TApp.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyCtrlS {
+			app.returnToStatus()
+			return nil
+		}
 		if app.activity != nil {
 			return app.activityInput(event)
 		}
 		switch event.Key() {
 		case tcell.KeyCtrlH:
 			app.goToSection(helpSection, info)
-		case tcell.KeyCtrlS:
-			app.goToSection(statusSection, info)
 		case tcell.KeyCtrlF:
 			app.goToSection(feedSection, info)
 		case tcell.KeyCtrlP:
@@ -100,7 +102,8 @@ func (a *App) initializeStateFromConfig() {
 	} else {
 		cfg := a.Config.Tamagotchi
 		a.currentTamagotchi = &Tamagotchi{
-			Cleanliness: cfg.Cleanliness, Diaper: cfg.Diaper, CareTicks: cfg.CareTicks, LastWash: cfg.LastWash, LastChange: cfg.LastChange,
+			HealthyTicks: cfg.HealthyTicks,
+			Cleanliness:  cfg.Cleanliness, Diaper: cfg.Diaper, CareTicks: cfg.CareTicks, LastWash: cfg.LastWash, LastChange: cfg.LastChange,
 			Name:      cfg.Name,
 			Age:       cfg.Age,
 			Hunger:    cfg.Hunger,
@@ -276,6 +279,8 @@ func (a *App) applyTickLocked() {
 		return
 	}
 
+	a.applyRecoveryLocked()
+
 	ageInHours := int(time.Since(t.Created).Hours())
 	if ageInHours < 0 {
 		ageInHours = 0
@@ -391,6 +396,7 @@ func (a *App) updateConfigFromState() {
 	a.stateMu.RLock()
 	a.Config.App.TickRemainder = a.timeAccumulator
 	a.stateMu.RUnlock()
+	a.Config.Tamagotchi.HealthyTicks = t.HealthyTicks
 	a.Config.Tamagotchi.Cleanliness = t.Cleanliness
 	a.Config.Tamagotchi.Diaper = t.Diaper
 	a.Config.Tamagotchi.CareTicks = t.CareTicks
@@ -528,6 +534,7 @@ func (a *App) checkDeathLocked() {
 	t := a.currentTamagotchi
 	if t != nil && t.Health <= 0 {
 		t.Health = 0
+		t.HealthyTicks = 0
 		if t.IsAlive {
 			t.IsAlive = false
 			a.addGameEvent("DEATH", "Your tamagotchi has passed away... 💔")

@@ -75,6 +75,7 @@ func (a *App) feedTamagotchi(foodIndex int) {
 	excess := food.Nutrition - a.currentTamagotchi.Hunger
 	if excess > 0 {
 		damage = max(5, excess/2)
+		a.currentTamagotchi.HealthyTicks = 0
 		a.currentTamagotchi.Health = max(0, a.currentTamagotchi.Health-damage)
 	}
 	a.currentTamagotchi.Hunger = max(0, a.currentTamagotchi.Hunger-food.Nutrition)
@@ -82,6 +83,7 @@ func (a *App) feedTamagotchi(foodIndex int) {
 	a.currentTamagotchi.Energy = min(100, a.currentTamagotchi.Energy+food.Energy)
 	a.currentTamagotchi.Weight += food.WeightGain
 	a.currentTamagotchi.LastFed = now
+	a.resetRecoveryIfNeededLocked()
 	a.checkDeathLocked()
 	a.stateMu.Unlock()
 

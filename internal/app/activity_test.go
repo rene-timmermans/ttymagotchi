@@ -117,6 +117,7 @@ func TestFeedingAnimationCommitsOnce(t *testing.T) {
 		a := testApp(t)
 		before, _ := a.tamagotchiSnapshot()
 		a.startFeeding(0)
+		g := a.activity
 		if a.currentTamagotchi.Hunger != before.Hunger {
 			t.Fatal("fed before animation")
 		}
@@ -131,10 +132,12 @@ func TestFeedingAnimationCommitsOnce(t *testing.T) {
 		if a.currentTamagotchi.Hunger != 30 || len(a.gameEvents) != 1 {
 			t.Fatal("missing or duplicate meal")
 		}
-		if a.activity.phase != "result" || !strings.Contains(a.activity.message, "50 → 30") {
+		if g.phase != "result" || !strings.Contains(g.message, "50 → 30") {
 			t.Fatal("missing result")
 		}
-		key(a, tcell.KeyEnter, 0)
+		if a.activity != nil {
+			key(a, tcell.KeyEnter, 0)
+		}
 		if a.activity != nil {
 			t.Fatal("not back at menu")
 		}

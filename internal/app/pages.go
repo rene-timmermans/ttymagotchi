@@ -46,7 +46,7 @@ func (a *App) getPagesInfo() (tview.Primitive, tview.Primitive) {
 	// Info bar
 	info := tview.NewTextView().
 		SetDynamicColors(true).
-		SetText("Ctrl+S Status | Ctrl+F Feed | Ctrl+P Play | Ctrl+L Sleep\nCtrl+Y Hygiene | Ctrl+O Options | Ctrl+E Events\nCtrl+H Help | Ctrl+R Restart | Ctrl+C Quit")
+		SetText("Esc / Ctrl+S Status | Ctrl+F Feed | Ctrl+P Play | Ctrl+L Sleep\nCtrl+Y Hygiene | Ctrl+O Options | Ctrl+E Events\nCtrl+H Help | Ctrl+R Restart | Ctrl+C Quit")
 
 	return pages, info
 }
@@ -66,4 +66,24 @@ func getList() *tview.List {
 	list.SetBorder(true)
 	list.SetTitle("Termagotchi")
 	return list
+}
+
+// Escape and Ctrl+S have the same destination, including from an activity.
+func (a *App) returnToStatus() {
+	if g := a.activity; g != nil {
+		if g.phase != "result" {
+			if isCare(g.kind) {
+				a.finishCare()
+			} else if g.kind == "food" {
+				a.finishFeeding()
+			}
+		}
+		a.closeActivity()
+	}
+	// Returning from the restart dialog cancels the pending restart.
+	a.modal = nil
+	a.TApp.SetRoot(a.TLayout, true)
+	a.goToSection(statusSection, nil)
+	a.TApp.SetFocus(a.TLayout)
+	a.requestRefresh()
 }

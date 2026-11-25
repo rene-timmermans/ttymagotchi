@@ -109,6 +109,7 @@ func (a *App) finishCare() {
 			t.LastChange = time.Now()
 			g.message = fmt.Sprintf("Fresh diaper! Freshness %d → 100", before.Diaper)
 		}
+		a.resetRecoveryIfNeededLocked()
 		// Hygiene stops neglect damage; washing alone does not heal existing illness.
 		a.stateMu.Unlock()
 		a.updateConfigFromState()

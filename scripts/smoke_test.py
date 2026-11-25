@@ -66,8 +66,8 @@ tamagotchi:
         pump(0.5)
         send(b"\x1b")  # Skip bath
         pump(0.6)
-        saw("Squeaky")
-        send(b"\r")
+        saw("Status:")
+        send(b"\x19")
         send(b"\x1b[B\r")  # Select the next item: change diaper
         saw("Changing")
         pump(4.2)  # Complete this animation naturally
@@ -79,8 +79,7 @@ tamagotchi:
         saw("Zzz")
         send(b"\x1b")
         pump(0.6)
-        saw("rested!")
-        send(b"\r")
+        saw("Status:")
         send(b"\x0f")  # Ctrl+O: Options
         saw("Speed:")
         send(b"+")
@@ -94,10 +93,11 @@ tamagotchi:
         saw("Yum!")
         send(b"\r")
         send(b"\x1b[B" * 7 + b"\r")  # Steak exceeds remaining hunger
+        pump(3.2)
+        saw("Overfed!")
         send(b"\x1b")
         pump(0.6)
-        saw("Overfed!")
-        send(b"\r")
+        saw("Status:")
         send(b"\x03")
         for _ in range(50):
             child, status = os.waitpid(pid, os.WNOHANG)
