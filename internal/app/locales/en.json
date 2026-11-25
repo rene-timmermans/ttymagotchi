@@ -241,5 +241,7 @@
   "Accidents: 4–5 per day at 50% speed.": "Accidents: 4–5 per day at 50% speed.",
   "Each accident lowers Diaper by 35 points; no gradual decay.": "Each accident lowers Diaper by 35 points; no gradual decay.",
   "Your pet soiled its diaper. Diaper %d → %d.": "Your pet soiled its diaper. Diaper %d → %d.",
-  "Diaper: 4–5 accidents per day, -35 points each (normal speed).": "Diaper: 4–5 accidents per day, -35 points each (normal speed)."
+  "Diaper: 4–5 accidents per day, -35 points each (normal speed).": "Diaper: 4–5 accidents per day, -35 points each (normal speed).",
+  "=== STATS (↑/↓ + Enter) ===": "=== STATS (↑/↓ + Enter) ===",
+  "On Status: select a need with arrows, then press Enter.": "On Status: select a need with arrows, then press Enter."
 }

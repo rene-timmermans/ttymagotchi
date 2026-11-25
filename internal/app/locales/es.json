@@ -241,5 +241,7 @@
   "Accidents: 4–5 per day at 50% speed.": "Accidentes: 4–5 al día a velocidad del 50%.",
   "Each accident lowers Diaper by 35 points; no gradual decay.": "Cada accidente baja el pañal 35 puntos; no disminuye poco a poco.",
   "Your pet soiled its diaper. Diaper %d → %d.": "Tu mascota ha ensuciado el pañal. Pañal %d → %d.",
-  "Diaper: 4–5 accidents per day, -35 points each (normal speed).": "Pañal: 4–5 accidentes al día, -35 puntos cada uno (velocidad normal)."
+  "Diaper: 4–5 accidents per day, -35 points each (normal speed).": "Pañal: 4–5 accidentes al día, -35 puntos cada uno (velocidad normal).",
+  "=== STATS (↑/↓ + Enter) ===": "=== ESTADÍSTICAS (↑/↓ + Intro) ===",
+  "On Status: select a need with arrows, then press Enter.": "Estado: selecciona una necesidad con flechas y pulsa Intro."
 }

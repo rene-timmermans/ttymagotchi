@@ -68,6 +68,7 @@ var helpText = []string{
 	"Ctrl+R: Restart - Reset tamagotchi to new egg",
 	"Ctrl+C: Quit - Exit the game",
 	"Use arrow keys and Enter to navigate menus.",
+	"On Status: select a need with arrows, then press Enter.",
 	"Your tamagotchi progress is automatically saved.",
 	"Data is stored in your config directory.",
 }

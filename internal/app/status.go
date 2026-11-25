@@ -40,7 +40,7 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 
 	// Stats with visual bars
 	listStatus.AddItem("", "", 0, nil) // Empty line
-	listStatus.AddItem(a.tr("=== STATS ==="), "", 0, nil)
+	listStatus.AddItem(a.tr("=== STATS (↑/↓ + Enter) ==="), "", 0, nil)
 
 	// Hunger bar
 	hungerBar := a.createProgressBar(t.Hunger, 100)
@@ -50,7 +50,7 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 	} else if t.Hunger > 60 {
 		hungerColor = "🤤"
 	}
-	listStatus.AddItem(fmt.Sprintf(a.tr("Hunger: %s %s"), hungerColor, hungerBar), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Hunger: %s %s"), hungerColor, hungerBar), "", 0, func() { a.openStatusSection(feedSection) })
 
 	// Happiness bar
 	happinessBar := a.createProgressBar(t.Happiness, 100)
@@ -60,12 +60,12 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 	} else if t.Happiness < 50 {
 		happinessColor = "😐"
 	}
-	listStatus.AddItem(fmt.Sprintf(a.tr("Happiness: %s %s"), happinessColor, happinessBar), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Happiness: %s %s"), happinessColor, happinessBar), "", 0, func() { a.openStatusSection(playSection) })
 
 	// Health bar
 	healthBar := a.createProgressBar(t.Health, 100)
 	healthColor := healthIcon(t.Health)
-	listStatus.AddItem(fmt.Sprintf(a.tr("Health: %s %s"), healthColor, healthBar), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Health: %s %s"), healthColor, healthBar), "", 0, a.openRecoveryHelp)
 
 	// Energy bar
 	energyBar := a.createProgressBar(t.Energy, 100)
@@ -75,13 +75,13 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 	} else if t.Energy < 50 {
 		energyColor = "😪"
 	}
-	listStatus.AddItem(fmt.Sprintf(a.tr("Energy: %s %s"), energyColor, energyBar), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Energy: %s %s"), energyColor, energyBar), "", 0, func() { a.openStatusSection(sleepSection) })
 
-	listStatus.AddItem(a.tr("Hygiene: ")+"🧴 "+a.createProgressBar(hygieneLevel(t), 100), "", 0, nil)
-	listStatus.AddItem(fmt.Sprintf(a.tr("Cleanliness: %s"), "🧼 "+a.createProgressBar(t.Cleanliness, 100)), "", 0, nil)
-	listStatus.AddItem(fmt.Sprintf("%s: %s", a.tr(ageCareLabel(t)), ageCareIcon(t)+" "+a.createProgressBar(ageCareLevel(t), 100)), "", 0, nil)
+	listStatus.AddItem(a.tr("Hygiene: ")+"🧴 "+a.createProgressBar(hygieneLevel(t), 100), "", 0, func() { a.openStatusSection(hygieneSection) })
+	listStatus.AddItem(fmt.Sprintf(a.tr("Cleanliness: %s"), "🧼 "+a.createProgressBar(t.Cleanliness, 100)), "", 0, func() { a.startCare("wash", 0) })
+	listStatus.AddItem(fmt.Sprintf("%s: %s", a.tr(ageCareLabel(t)), ageCareIcon(t)+" "+a.createProgressBar(ageCareLevel(t), 100)), "", 0, a.startStatusAgeCare)
 
-	listStatus.AddItem(a.recoveryStatus(t), "", 0, nil)
+	listStatus.AddItem(a.recoveryStatus(t), "", 0, a.openRecoveryHelp)
 
 	// Last actions
 	listStatus.AddItem("", "", 0, nil) // Empty line
@@ -369,4 +369,24 @@ func healthIcon(health int) string {
 		return "💛"
 	}
 	return "💚"
+}
+
+// Status uses the same menus as the shortcuts when a choice is required.
+func (a *App) openStatusSection(section string) {
+	a.goToSection(section, nil)
+	if list := a.viewsList[strings.ToLower(section)]; list != nil {
+		a.TApp.SetFocus(list)
+	}
+}
+
+func (a *App) openRecoveryHelp() {
+	a.openStatusSection(helpSection)
+	a.viewsList["help"].SetCurrentItem(1) // CARE & HEALTH section.
+}
+
+func (a *App) startStatusAgeCare() {
+	// Resolve the action at activation time, including growth since the last draw.
+	if pet, ok := a.tamagotchiSnapshot(); ok {
+		a.startCare(ageCareKind(pet), 0)
+	}
 }
