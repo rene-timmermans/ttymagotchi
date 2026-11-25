@@ -2,6 +2,7 @@
 
 Based on upstream v0.2.0. Source: `/home/deck/Documenten/Codex/Termagotchi`.
 
+- New pets also receive a random name from the 100 most common Dutch first given names. Source: [Nederlandse Voornamenbank, Meertens Instituut KNAW (2022)](https://nvb.meertens.knaw.nl/downloads/Top_eerste_voornamen_NL_2022.zip), combining female and male carrier counts. Every name in the pool has equal selection probability. Existing saved names stay unchanged; a new game/restart draws a new name.
 - New pets randomly become a cat, dog, rabbit, guinea pig or penguin (Tux). All start in the same mystery egg; their species is revealed only after hatching and saved across restarts. Existing saves receive a species once; their pet stats are preserved.
 - Each species has ten appearances: Egg, Hatchling, Baby, Toddler, Youngster, Child, Preteen, Teen, Adolescent, Adult. They arrive at ages 0, 1, 2, 3, 4, 5, 7, 9, 12 and 14 days. Status shows the current stage out of ten.
 - Pets and care scenes use larger, detailed terminal drawings (roughly four times the former figure area), with blinking, tails, ears or feet moving on Status. Food and washing effects use each species’ face and body positions.
