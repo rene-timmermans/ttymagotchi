@@ -71,10 +71,8 @@ func (a *App) feedTamagotchi(foodIndex int) {
 		return
 	}
 
-	damage := 0
-	excess := food.Nutrition - a.currentTamagotchi.Hunger
-	if excess > 0 {
-		damage = max(5, excess/2)
+	damage := overfeedingDamage(food, a.currentTamagotchi.Hunger)
+	if damage > 0 {
 		a.currentTamagotchi.HealthyTicks = 0
 		a.currentTamagotchi.Health = max(0, a.currentTamagotchi.Health-damage)
 	}
@@ -105,4 +103,12 @@ func (a *App) feedPage() (title string, content tview.Primitive) {
 		AddItem(tview.NewFlex().
 			SetDirection(tview.FlexRow).
 			AddItem(listFeed, 0, 1, true), 0, 1, true)
+}
+
+func overfeedingDamage(food Food, hunger int) int {
+	excess := food.Nutrition - hunger
+	if excess <= 0 {
+		return 0
+	}
+	return max(5, excess/2)
 }

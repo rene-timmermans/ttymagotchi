@@ -243,5 +243,14 @@
   "Your pet soiled its diaper. Diaper %d → %d.": "Dein Tier hat die Windel vollgemacht. Windel %d → %d.",
   "Diaper: 4–5 accidents per day, -35 points each (normal speed).": "Windel: 4–5 Missgeschicke am Tag, je -35 Punkte (normales Tempo).",
   "=== STATS (↑/↓ + Enter) ===": "=== WERTE (↑/↓ + Enter) ===",
-  "On Status: select a need with arrows, then press Enter.": "Status: Bedürfnis mit Pfeiltasten wählen und Enter drücken."
+  "On Status: select a need with arrows, then press Enter.": "Status: Bedürfnis mit Pfeiltasten wählen und Enter drücken.",
+  "I'm full! Feeding anyway costs %d health.": "Ich bin satt! Weiterfüttern kostet %d Gesundheitspunkte.",
+  "Feed?": "Füttern?",
+  "Your pet is hungry again. Feeding is safe now.": "Dein Tier hat wieder Hunger. Füttern ist jetzt unbedenklich.",
+  "This would be fatal.": "Das wäre tödlich.",
+  "Enter: show choices • Esc: stop feeding": "Enter: Auswahl • Esc: Füttern beenden",
+  "Stop feeding": "Nicht weiterfüttern",
+  "Feed anyway": "Trotzdem füttern",
+  "←/→: choose • Enter: confirm • Esc: stop": "←/→: wählen • Enter: bestätigen • Esc: abbrechen",
+  "At hunger 0, No! appears; choose Stop feeding or Feed anyway.": "Bei Hunger 0 erscheint Nein!: aufhören oder trotzdem füttern."
 }

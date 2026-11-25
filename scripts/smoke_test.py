@@ -98,7 +98,7 @@ tamagotchi:
         saw_key("Status: %s")
         send(b"\x0f")  # Ctrl+O: Options
         saw_key("Speed: %d%%   ← slower / faster →   (+ / -)")
-        send(b"\x1b[B" * (["en", "fr", "es", "de"].index(language) + 1) + b"\r")
+        send(b"\x1b[B" * (["en", "fr", "es", "de", "nl"].index(language) + 1) + b"\r")
         assert f"language: {language}" in save.read_text(), "Language choice not saved"
         send(b"+")
         assert "speed_percent: 51" in save.read_text(), "Speed was not saved immediately"
@@ -123,8 +123,24 @@ tamagotchi:
         send(b"\x1b")
         pump(0.6)
         saw_key("Status: %s")
+        send(b"\x06")
+        send(b"\x1b[A" * 7 + b"\r")  # Apple while full: first stop.
+        saw_key("I'm full! Feeding anyway costs %d health.")
+        pump(3.2)
+        saw_key("Stop feeding")
+        send(b"\r")  # Default is stop; no penalty.
+        pump(0.6)
+        send(b"\x06")
+        send(b"\r")  # Same apple, now explicitly continue.
+        pump(3.2)
+        saw_key("Feed anyway")
+        send(b"\x1b[C\r")
+        pump(3.2)
+        saw_key("Overfed! Your pet feels sick.\n")
+        send(b"\x1b")
+        pump(0.6)
         send(b"\x0c")
-        send(b"\r")  # Energy is now 70: refuse further sleep.
+        send(b"\r")  # Energy is now 80: refuse further sleep.
         saw_key("No!")
         saw_key("Not sleepy! Energy must be 60% or lower.")
         pump(0.4)
@@ -141,9 +157,9 @@ tamagotchi:
         assert os.waitstatus_to_exitcode(status) == 0, f"Exit status: {status}"
         assert b"DATA RACE" not in output, "Go race detector reported a race"
         saved = save.read_text()
-        for expected in ("speed_percent: 50", "cleanliness: 100", f"{care_field}: 100", "hunger: 0", "health: 70", "energy: 70", f"language: {language}"):
+        for expected in ("speed_percent: 50", "cleanliness: 100", f"{care_field}: 100", "hunger: 0", "health: 60", "energy: 80", f"language: {language}"):
             assert expected in saved, f"Missing saved state: {expected}\n{saved}"
-        print(f"PTY smoke test passed ({pet_stage}, {language}): wash, {care_field}, sleep, speed, feeding, overfeeding, quit and save.")
+        print(f"PTY smoke test passed ({pet_stage}, {language}): wash, {care_field}, sleep, speed, feeding, refusal, stop/continue, overfeeding, quit and save.")
     finally:
         if not exited:
             try:

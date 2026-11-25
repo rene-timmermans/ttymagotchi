@@ -102,7 +102,7 @@ func LoadConfig() (*Config, error) {
 	}
 
 	switch cfg.App.Language {
-	case "en", "fr", "es", "de":
+	case "en", "fr", "es", "de", "nl":
 	default:
 		cfg.App.Language = "en"
 	}

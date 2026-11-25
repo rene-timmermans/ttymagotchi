@@ -243,5 +243,14 @@
   "Your pet soiled its diaper. Diaper %d → %d.": "Your pet soiled its diaper. Diaper %d → %d.",
   "Diaper: 4–5 accidents per day, -35 points each (normal speed).": "Diaper: 4–5 accidents per day, -35 points each (normal speed).",
   "=== STATS (↑/↓ + Enter) ===": "=== STATS (↑/↓ + Enter) ===",
-  "On Status: select a need with arrows, then press Enter.": "On Status: select a need with arrows, then press Enter."
+  "On Status: select a need with arrows, then press Enter.": "On Status: select a need with arrows, then press Enter.",
+  "I'm full! Feeding anyway costs %d health.": "I'm full! Feeding anyway costs %d health.",
+  "Feed?": "Feed?",
+  "Your pet is hungry again. Feeding is safe now.": "Your pet is hungry again. Feeding is safe now.",
+  "This would be fatal.": "This would be fatal.",
+  "Enter: show choices • Esc: stop feeding": "Enter: show choices • Esc: stop feeding",
+  "Stop feeding": "Stop feeding",
+  "Feed anyway": "Feed anyway",
+  "←/→: choose • Enter: confirm • Esc: stop": "←/→: choose • Enter: confirm • Esc: stop",
+  "At hunger 0, No! appears; choose Stop feeding or Feed anyway.": "At hunger 0, No! appears; choose Stop feeding or Feed anyway."
 }

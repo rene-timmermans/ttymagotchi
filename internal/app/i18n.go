@@ -13,8 +13,8 @@ import (
 //go:embed locales/*.json
 var localeFiles embed.FS
 
-var languageCodes = []string{"en", "fr", "es", "de"}
-var languageNames = map[string]string{"en": "English", "fr": "Français", "es": "Español", "de": "Deutsch"}
+var languageCodes = []string{"en", "fr", "es", "de", "nl"}
+var languageNames = map[string]string{"en": "English", "fr": "Français", "es": "Español", "de": "Deutsch", "nl": "Nederlands"}
 var translations = loadTranslations()
 
 func loadTranslations() map[string]map[string]string {

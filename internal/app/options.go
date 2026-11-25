@@ -83,7 +83,7 @@ func (a *App) generateOptionsList(list *tview.List) {
 func (a *App) optionsPage() (string, tview.Primitive) {
 	list := getList()
 	list.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if list.GetCurrentItem() <= 4 && (event.Key() == tcell.KeyLeft || event.Key() == tcell.KeyRight) {
+		if list.GetCurrentItem() <= len(languageCodes) && (event.Key() == tcell.KeyLeft || event.Key() == tcell.KeyRight) {
 			delta := 1
 			if event.Key() == tcell.KeyLeft {
 				delta = -1

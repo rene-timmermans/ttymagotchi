@@ -17,6 +17,7 @@ import (
 
 	"github.com/ezeoleaf/termagotchi/internal/config"
 	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 	"github.com/rivo/uniseg"
 )
 
@@ -223,5 +224,38 @@ func TestReadingUsesTheSelectedLanguage(t *testing.T) {
 		if g.score != 1 || g.phase != "between" {
 			t.Fatalf("%s reading failed", code)
 		}
+	}
+}
+
+func TestDutchOptionSelectionAndLanguageArrows(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	a := testApp(t)
+	a.Config = cfg
+	list := a.viewsList["options"]
+	list.SetCurrentItem(len(languageCodes)) // Last language row: Nederlands.
+	list.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone), func(p tview.Primitive) { a.TApp.SetFocus(p) })
+	if a.Config.App.Language != "nl" {
+		t.Fatal("Dutch option did not select Dutch")
+	}
+	text, _ := list.GetItemText(0)
+	if text != "Taal: Nederlands" {
+		t.Fatalf("Dutch heading: %q", text)
+	}
+	for _, step := range []struct {
+		key  tcell.Key
+		want string
+	}{{tcell.KeyRight, "en"}, {tcell.KeyLeft, "nl"}} {
+		list.InputHandler()(tcell.NewEventKey(step.key, 0, tcell.ModNone), func(p tview.Primitive) { a.TApp.SetFocus(p) })
+		if a.Config.App.Language != step.want || a.Config.App.SpeedPercent != 50 {
+			t.Fatal("language arrows changed speed or failed to wrap")
+		}
+	}
+	saved, err := config.LoadConfig()
+	if err != nil || saved.App.Language != "nl" {
+		t.Fatal("Dutch preference did not survive reload")
 	}
 }

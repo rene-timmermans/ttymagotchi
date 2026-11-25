@@ -66,7 +66,11 @@ func (a *App) startFeeding(index int) {
 	if !ok || !t.IsAlive {
 		return
 	}
-	a.openActivity("food", index)
+	kind := "food"
+	if t.Hunger == 0 {
+		kind = "refuse_food"
+	}
+	a.openActivity(kind, index)
 	a.activity.started = time.Now()
 	a.activity.phase = "playing"
 	a.renderActivity(time.Now())
@@ -132,6 +136,9 @@ func (a *App) activityInput(event *tcell.EventKey) *tcell.EventKey {
 	}
 	now := time.Now()
 	a.tickActivity(now)
+	if g.kind == "refuse_food" {
+		return a.foodRefusalInput(event, now)
+	}
 	if g.phase == "result" {
 		if event.Key() == tcell.KeyEnter || event.Rune() == ' ' {
 			a.closeActivity()
@@ -189,7 +196,7 @@ func (a *App) activityInput(event *tcell.EventKey) *tcell.EventKey {
 
 func (a *App) finishFeeding() {
 	g := a.activity
-	if g.phase == "result" {
+	if g.kind != "food" || g.phase == "result" {
 		return
 	}
 	before, _ := a.tamagotchiSnapshot()
@@ -216,7 +223,11 @@ func (a *App) tickActivity(now time.Time) {
 	if g == nil {
 		return
 	}
-	if g.kind == "refuse" {
+	if g.kind == "refuse_food" {
+		if g.phase == "playing" && now.Sub(g.started) >= 3*time.Second {
+			g.phase = "choice"
+		}
+	} else if g.kind == "refuse" {
 		if now.Sub(g.started) >= 3*time.Second {
 			g.phase = "result"
 		}
@@ -254,7 +265,9 @@ func (a *App) renderActivity(now time.Time) {
 	t, _ := a.tamagotchiSnapshot()
 	title, body, hint := "", "", a.tr("Esc: Status (cancel game) • Ctrl+C: quit")
 	sprite := renderTamagotchiSprite(t)
-	if g.kind == "refuse" {
+	if g.kind == "refuse_food" {
+		title, body, hint, sprite = a.foodRefusalView(t, now)
+	} else if g.kind == "refuse" {
 		title = "[red]" + a.tr("No!") + "[-]"
 		body = a.tr("Not sleepy! Energy must be 60% or lower.")
 		sprite = renderActionSprite(t, "refuse", g.index, now.Sub(g.started))

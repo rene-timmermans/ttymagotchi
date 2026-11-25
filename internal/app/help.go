@@ -52,6 +52,7 @@ var helpText = []string{
 	"Enter starts; Esc cancels unfinished games and opens Status.",
 	"Use Space, arrow keys, WASD or 1–3 as shown in each game.",
 	"Esc finishes food/care once and returns directly to Status.",
+	"At hunger 0, No! appears; choose Stop feeding or Feed anyway.",
 	"SPEED & LANGUAGE",
 	"Ctrl+O: choose language and speed. Settings save immediately.",
 	"Speed: 0% = 1 week, 50% = 8 hours, 100% = 5 minutes.",

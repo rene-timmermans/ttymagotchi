@@ -38,6 +38,7 @@ func TestOverfeedingStarvationAndDeath(t *testing.T) {
 	pet := a.currentTamagotchi
 	pet.Hunger = 0
 	a.startFeeding(0)
+	confirmFullMeal(t, a)
 	a.tickActivity(a.activity.started.Add(4 * time.Second))
 	if pet.Health != 90 || !strings.Contains(a.activity.message, "Overfed") {
 		t.Fatal("overfeeding did not hurt")
@@ -86,6 +87,7 @@ func TestOverfeedingStarvationAndDeath(t *testing.T) {
 	b.currentTamagotchi.Hunger = 0
 	b.currentTamagotchi.Health = 1
 	b.startFeeding(0)
+	confirmFullMeal(t, b)
 	b.finishFeeding()
 	if b.currentTamagotchi.IsAlive || !strings.Contains(b.activity.message, "passed away") {
 		t.Fatal("lethal overfeed did not kill")
