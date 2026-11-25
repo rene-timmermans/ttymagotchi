@@ -34,6 +34,12 @@ func (a *App) generateHelpList(listHelp *tview.List) {
 	listHelp.AddItem("• Energy is needed for playing", "", 0, nil)
 	listHelp.AddItem("", "", 0, nil) // Empty line
 
+	listHelp.AddItem("MINIGAMES & FEEDING", "", 0, nil)
+	listHelp.AddItem("Timing: Space in the green zone. Memory: repeat the arrows.", "", 0, nil)
+	listHelp.AddItem("Follow the arrows: arrow keys or WASD. Scores scale rewards.", "", 0, nil)
+	listHelp.AddItem("Enter starts; Esc cancels without rewards or energy cost.", "", 0, nil)
+	listHelp.AddItem("Food is applied after the animation; Esc skips the animation.", "", 0, nil)
+	listHelp.AddItem("", "", 0, nil)
 	listHelp.AddItem("🎯 TIPS FOR SUCCESS", "", 0, nil)
 	listHelp.AddItem("• Feed regularly to prevent hunger", "", 0, nil)
 	listHelp.AddItem("• Play games to increase happiness", "", 0, nil)

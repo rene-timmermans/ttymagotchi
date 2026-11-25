@@ -23,11 +23,14 @@ type App struct {
 	currentTamagotchi *Tamagotchi
 	gameEvents        []GameEvent
 	modal             *tview.Modal
+	activity          *activity
+	done              chan struct{}
 
 	stateMu         sync.RWMutex
 	eventsMu        sync.Mutex
 	uiMu            sync.Mutex
 	tuiRunning      bool
+	activityActive  bool
 	uiReady         bool
 	uiReadyOnce     sync.Once
 	needsRefresh    bool
@@ -39,6 +42,7 @@ type App struct {
 func NewApp(cfg *config.Config) *App {
 	app := &App{
 		TApp:           tview.NewApplication(),
+		done:           make(chan struct{}),
 		Config:         cfg,
 		viewsList:      make(map[string]*tview.List),
 		gameEvents:     make([]GameEvent, 0),
@@ -55,6 +59,9 @@ func NewApp(cfg *config.Config) *App {
 		AddItem(info, 1, 1, false)
 
 	app.TApp.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if app.activity != nil {
+			return app.activityInput(event)
+		}
 		switch event.Key() {
 		case tcell.KeyCtrlH:
 			app.goToSection(helpSection, info)
@@ -121,6 +128,7 @@ func (a *App) Run() {
 	app := a.TApp.SetRoot(a.TLayout, true).EnableMouse(true)
 
 	defer func() {
+		close(a.done)
 		a.uiMu.Lock()
 		a.tuiRunning = false
 		a.uiMu.Unlock()
@@ -179,11 +187,17 @@ func (a *App) restartTamagotchi() {
 }
 
 func (a *App) gameLoop() {
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
 	lastTick := time.Now()
-	for now := range ticker.C {
+	for {
+		var now time.Time
+		select {
+		case <-a.done:
+			return
+		case now = <-ticker.C:
+		}
 		elapsed := now.Sub(lastTick)
 		lastTick = now
 		if elapsed < 0 {
@@ -315,14 +329,19 @@ func (a *App) requestRefresh() {
 
 func (a *App) refreshUI() {
 	a.uiMu.Lock()
-	if !a.tuiRunning || !a.uiReady || !a.needsRefresh || a.TApp == nil {
+	if !a.tuiRunning || !a.uiReady || (!a.needsRefresh && !a.activityActive) || a.TApp == nil {
 		a.uiMu.Unlock()
 		return
 	}
+	refresh := a.needsRefresh
 	a.needsRefresh = false
 	a.uiMu.Unlock()
 
 	a.TApp.QueueUpdateDraw(func() {
+		a.tickActivity(time.Now())
+		if !refresh {
+			return
+		}
 		if list := a.viewsList["status"]; list != nil {
 			a.generateStatusList(list)
 		}

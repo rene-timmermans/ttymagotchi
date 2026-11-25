@@ -1,3 +1,26 @@
+## Local interactive edition
+
+Based on upstream v0.2.0. Source: `/home/deck/Documenten/Codex/Termagotchi`.
+
+- Every play option now opens a three-round minigame. Play Ball, Run Around and Sing Songs use a moving timing marker; Draw Pictures and Dance Party use arrow sequences; Solve Puzzle, Read Books and Hide & Seek use memory sequences.
+- Press Enter to begin. Use Space for timing, or arrow keys / WASD for sequences. Memory arrows appear one at a time, then disappear before input begins.
+- Happiness, health and weight loss scale with the number of successful rounds. Completing a game spends its listed energy even on a zero score. The list shows maximum rewards.
+- Esc cancels an unfinished game without changing stats. Enter or Esc closes the result. Ctrl+C exits and saves normally.
+- Feeding shows a three-second animation with approaching food, chewing and a result showing stat changes. Esc skips to the result; each meal is applied exactly once.
+- Existing save files and passive time progression remain compatible.
+
+Build and install for this user:
+
+```sh
+go test ./...
+go build -o bin/termagotchi ./cmd/termagotchi
+install -Dm755 bin/termagotchi /home/deck/.local/bin/termagotchi
+```
+
+Run `termagotchi` in a new terminal. The user binary takes precedence over the AUR binary; `/usr/bin/termagotchi` still runs the original version. Avoid running both against the same save at once.
+
+---
+
 # Termagotchi 🐾
 
 A terminal-based Tamagotchi simulation written in Go, featuring a simple and hacky TUI interface.

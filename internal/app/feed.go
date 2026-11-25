@@ -43,7 +43,7 @@ func (a *App) generateFeedList(listFeed *tview.List) {
 				food.Name, food.Nutrition, food.Happiness, food.Energy, food.WeightGain),
 			"",
 			0,
-			func() { a.feedTamagotchi(foodIndex) },
+			func() { a.startFeeding(foodIndex) },
 		)
 	}
 

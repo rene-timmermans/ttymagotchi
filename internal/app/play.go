@@ -48,7 +48,7 @@ func (a *App) generatePlayList(listPlay *tview.List) {
 		listPlay.AddItem("", "", 0, nil) // Empty line
 	}
 
-	listPlay.AddItem("=== AVAILABLE GAMES ===", "", 0, nil)
+	listPlay.AddItem("=== AVAILABLE GAMES (maximum rewards) ===", "", 0, nil)
 	listPlay.AddItem("", "", 0, nil) // Empty line
 
 	for i, game := range availableGames {
@@ -82,33 +82,44 @@ func (a *App) playWithTamagotchi(gameIndex int) {
 		return
 	}
 
+	if a.activity != nil || a.modal != nil {
+		return
+	}
+	t, ok := a.tamagotchiSnapshot()
+	if !ok || !t.IsAlive || t.Energy < 10 {
+		return
+	}
+	a.startGame(gameIndex)
+}
+
+// Rewards are committed once, only after the final round.
+func (a *App) rewardGame(gameIndex, score, total int) string {
 	game := availableGames[gameIndex]
-	now := time.Now()
-
+	happiness := game.Happiness * score / total
+	health := game.Health * score / total
 	a.stateMu.Lock()
-	if a.currentTamagotchi == nil || !a.currentTamagotchi.IsAlive {
+	t := a.currentTamagotchi
+	if t == nil || !t.IsAlive || t.Energy < 10 {
 		a.stateMu.Unlock()
-		return
+		return "Your pet cannot play right now. No stats changed."
 	}
-
-	if a.currentTamagotchi.Energy < 10 {
-		a.stateMu.Unlock()
-		return
-	}
-
-	a.currentTamagotchi.Happiness = min(100, a.currentTamagotchi.Happiness+game.Happiness)
-	a.currentTamagotchi.Energy = max(0, min(100, a.currentTamagotchi.Energy+game.Energy))
-	a.currentTamagotchi.Health = min(100, a.currentTamagotchi.Health+game.Health)
-	if a.currentTamagotchi.Weight-game.WeightLoss < 10.0 {
-		a.currentTamagotchi.Weight = 10.0
-	} else {
-		a.currentTamagotchi.Weight -= game.WeightLoss
-	}
-	a.currentTamagotchi.LastPlay = now
+	t.Happiness = min(100, t.Happiness+happiness)
+	t.Health = min(100, t.Health+health)
+	t.Energy = max(0, t.Energy+game.Energy)
+	t.Weight = maxWeight(10, t.Weight-game.WeightLoss*float64(score)/float64(total))
+	t.LastPlay = time.Now()
 	a.stateMu.Unlock()
-
 	a.updateConfigFromState()
-	a.addGameEvent("PLAY", fmt.Sprintf("Played %s! Happiness +%d, Energy %d", game.Name, game.Happiness, game.Energy))
+	result := fmt.Sprintf("Score %d/%d | Happiness +%d | Health +%d | Energy %d", score, total, happiness, health, game.Energy)
+	a.addGameEvent("PLAY", game.Name+": "+result)
+	return result
+}
+
+func maxWeight(a, b float64) float64 {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 func (a *App) playPage() (title string, content tview.Primitive) {
