@@ -43,7 +43,8 @@ func (a *App) generateHygieneList(list *tview.List) {
 	list.AddItem(a.tr("At 20% or below, neglected hygiene damages health."), "", 0, nil)
 	list.AddItem(a.tr("Closer to 0% = more damage. Each active need counts independently."), "", 0, nil)
 	if needsDiaper(t) {
-		list.AddItem(a.tr("Diapers are needed through stage 3; Brushing starts at stage 4."), "", 0, nil)
+		list.AddItem(a.tr("Accidents: 4–5 per day at 50% speed."), "", 0, nil)
+		list.AddItem(a.tr("Each accident lowers Diaper by 35 points; no gradual decay."), "", 0, nil)
 	} else {
 		list.AddItem(a.tr("Brushing declines very slowly: 100 → 0 in ~7 days at 50% speed."), "", 0, nil)
 	}

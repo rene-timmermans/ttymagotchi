@@ -37,6 +37,7 @@ var helpText = []string{
 	"Energy: 0 = Tired, 100 = Energetic",
 	"Overfeeding damages health; hunger at 90+ also causes damage.",
 	"Diaper: stages 1–3. Brushing: stage 4 onward (~7 days at 50%).",
+	"Diaper: 4–5 accidents per day, -35 points each (normal speed).",
 	"Hygiene <= 20 damages health; closer to 0 means more damage.",
 	"Good care restores +1 health every 24 min at 50% speed.",
 	"Keep Happiness, Energy and active Hygiene needs >= 40%.",

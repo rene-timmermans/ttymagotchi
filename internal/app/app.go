@@ -105,6 +105,7 @@ func (a *App) initializeStateFromConfig() {
 		cfg := a.Config.Tamagotchi
 		a.currentTamagotchi = &Tamagotchi{
 			Diaper: cfg.Diaper, LastChange: cfg.LastChange,
+			DiaperDayTicks: cfg.DiaperDayTicks, DiaperEventCount: cfg.DiaperEventCount, DiaperNextEvent: cfg.DiaperNextEvent, DiaperEvents: cfg.DiaperEvents,
 			Species:      cfg.Species,
 			HealthyTicks: cfg.HealthyTicks,
 			Cleanliness:  cfg.Cleanliness, Grooming: cfg.Grooming, GroomTicks: cfg.GroomTicks, CareTicks: cfg.CareTicks, LastWash: cfg.LastWash, LastBrush: cfg.LastBrush,
@@ -127,6 +128,7 @@ func (a *App) initializeStateFromConfig() {
 	if !knownSpecies(a.currentTamagotchi.Species) {
 		a.currentTamagotchi.Species = randomSpecies()
 	}
+	ensureDiaperSchedule(a.currentTamagotchi)
 	a.timeAccumulator = maxDuration(0, minDuration(a.updateInterval-1, a.Config.App.TickRemainder))
 	a.checkDeathLocked()
 	a.applyOfflineProgress()
@@ -272,9 +274,7 @@ func (a *App) applyTickLocked() {
 		t.Cleanliness = max(0, t.Cleanliness-1)
 	}
 	if needsDiaper(*t) {
-		if t.CareTicks%2 == 0 {
-			t.Diaper = max(0, t.Diaper-1)
-		}
+		a.advanceDiaperLocked()
 	} else {
 		t.GroomTicks = (t.GroomTicks + 1) % 21
 		if t.GroomTicks == 0 {
@@ -407,14 +407,17 @@ func (a *App) updateConfigFromState() {
 		return
 	}
 	t := *a.currentTamagotchi
+	remainder := a.timeAccumulator
 	a.stateMu.RUnlock()
 
-	a.stateMu.RLock()
-	a.Config.App.TickRemainder = a.timeAccumulator
-	a.stateMu.RUnlock()
+	a.Config.App.TickRemainder = remainder
 	a.Config.Tamagotchi.Species = t.Species
 	a.Config.Tamagotchi.HealthyTicks = t.HealthyTicks
 	a.Config.Tamagotchi.Cleanliness = t.Cleanliness
+	a.Config.Tamagotchi.DiaperDayTicks = t.DiaperDayTicks
+	a.Config.Tamagotchi.DiaperEventCount = t.DiaperEventCount
+	a.Config.Tamagotchi.DiaperNextEvent = t.DiaperNextEvent
+	a.Config.Tamagotchi.DiaperEvents = t.DiaperEvents
 	a.Config.Tamagotchi.Diaper = t.Diaper
 	a.Config.Tamagotchi.LastChange = t.LastChange
 	a.Config.Tamagotchi.Grooming = t.Grooming
@@ -463,7 +466,7 @@ func (a *App) eventsSnapshot() []GameEvent {
 
 func newDefaultTamagotchi(name string) *Tamagotchi {
 	now := time.Now()
-	return &Tamagotchi{
+	pet := &Tamagotchi{
 		Species:     randomSpecies(),
 		Cleanliness: 100, Diaper: 100, Grooming: 100,
 		Name:      name,
@@ -480,6 +483,8 @@ func newDefaultTamagotchi(name string) *Tamagotchi {
 		LastSleep: now,
 		IsAlive:   true,
 	}
+	newDiaperSchedule(pet)
+	return pet
 }
 
 func formatDuration(d time.Duration) string {

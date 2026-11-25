@@ -23,29 +23,33 @@ type AppConfig struct {
 }
 
 type TamagotchiConfig struct {
-	Species      string    `yaml:"species"`
-	HealthyTicks int       `yaml:"healthy_ticks"`
-	Cleanliness  int       `yaml:"cleanliness"`
-	GroomTicks   int       `yaml:"groom_ticks"`
-	Diaper       int       `yaml:"diaper"`
-	LastChange   time.Time `yaml:"last_change"`
-	Grooming     int       `yaml:"grooming"`
-	CareTicks    int       `yaml:"care_ticks"`
-	LastWash     time.Time `yaml:"last_wash"`
-	LastBrush    time.Time `yaml:"last_brush"`
-	Name         string    `yaml:"name"`
-	Age          int       `yaml:"age"`
-	Hunger       int       `yaml:"hunger"`    // 0-100, 0 = full, 100 = starving
-	Happiness    int       `yaml:"happiness"` // 0-100, 0 = very sad, 100 = very happy
-	Health       int       `yaml:"health"`    // 0-100, 0 = dead, 100 = healthy
-	Energy       int       `yaml:"energy"`    // 0-100, 0 = tired, 100 = energetic
-	Weight       float64   `yaml:"weight"`    // in grams
-	Stage        string    `yaml:"stage"`     // ten stages from egg through adult
-	Created      time.Time `yaml:"created"`
-	LastFed      time.Time `yaml:"last_fed"`
-	LastPlay     time.Time `yaml:"last_play"`
-	LastSleep    time.Time `yaml:"last_sleep"`
-	IsAlive      bool      `yaml:"is_alive"`
+	Species          string    `yaml:"species"`
+	HealthyTicks     int       `yaml:"healthy_ticks"`
+	Cleanliness      int       `yaml:"cleanliness"`
+	GroomTicks       int       `yaml:"groom_ticks"`
+	DiaperDayTicks   int       `yaml:"diaper_day_ticks"`
+	DiaperEventCount int       `yaml:"diaper_event_count"`
+	DiaperNextEvent  int       `yaml:"diaper_next_event"`
+	DiaperEvents     [5]int    `yaml:"diaper_events"`
+	Diaper           int       `yaml:"diaper"`
+	LastChange       time.Time `yaml:"last_change"`
+	Grooming         int       `yaml:"grooming"`
+	CareTicks        int       `yaml:"care_ticks"`
+	LastWash         time.Time `yaml:"last_wash"`
+	LastBrush        time.Time `yaml:"last_brush"`
+	Name             string    `yaml:"name"`
+	Age              int       `yaml:"age"`
+	Hunger           int       `yaml:"hunger"`    // 0-100, 0 = full, 100 = starving
+	Happiness        int       `yaml:"happiness"` // 0-100, 0 = very sad, 100 = very happy
+	Health           int       `yaml:"health"`    // 0-100, 0 = dead, 100 = healthy
+	Energy           int       `yaml:"energy"`    // 0-100, 0 = tired, 100 = energetic
+	Weight           float64   `yaml:"weight"`    // in grams
+	Stage            string    `yaml:"stage"`     // ten stages from egg through adult
+	Created          time.Time `yaml:"created"`
+	LastFed          time.Time `yaml:"last_fed"`
+	LastPlay         time.Time `yaml:"last_play"`
+	LastSleep        time.Time `yaml:"last_sleep"`
+	IsAlive          bool      `yaml:"is_alive"`
 }
 
 func LoadConfig() (*Config, error) {

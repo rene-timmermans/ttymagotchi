@@ -237,5 +237,9 @@
   "Use arrow keys and Enter to navigate menus.": "Use arrow keys and Enter to navigate menus.",
   "Your tamagotchi progress is automatically saved.": "Your tamagotchi progress is automatically saved.",
   "Data is stored in your config directory.": "Data is stored in your config directory.",
-  "Swap %d/%d": "Swap %d/%d"
+  "Swap %d/%d": "Swap %d/%d",
+  "Accidents: 4–5 per day at 50% speed.": "Accidents: 4–5 per day at 50% speed.",
+  "Each accident lowers Diaper by 35 points; no gradual decay.": "Each accident lowers Diaper by 35 points; no gradual decay.",
+  "Your pet soiled its diaper. Diaper %d → %d.": "Your pet soiled its diaper. Diaper %d → %d.",
+  "Diaper: 4–5 accidents per day, -35 points each (normal speed).": "Diaper: 4–5 accidents per day, -35 points each (normal speed)."
 }

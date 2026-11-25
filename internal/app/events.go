@@ -29,6 +29,8 @@ func (a *App) generateEventsList(listEvents *tview.List) {
 		// Add color coding based on event type
 		var eventIcon string
 		switch event.Type {
+		case "DIAPER":
+			eventIcon = "💩"
 		case "FEED":
 			eventIcon = "🍽️"
 		case "PLAY":
