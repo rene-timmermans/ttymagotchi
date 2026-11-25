@@ -44,11 +44,11 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 
 	// Hunger bar
 	hungerBar := a.createProgressBar(t.Hunger, 100)
-	hungerColor := "🟢"
+	hungerColor := "🍽️"
 	if t.Hunger > 80 {
-		hungerColor = "🔴"
+		hungerColor = "😫"
 	} else if t.Hunger > 60 {
-		hungerColor = "🟡"
+		hungerColor = "🤤"
 	}
 	listStatus.AddItem(fmt.Sprintf(a.tr("Hunger: %s %s"), hungerColor, hungerBar), "", 0, nil)
 
@@ -64,12 +64,7 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 
 	// Health bar
 	healthBar := a.createProgressBar(t.Health, 100)
-	healthColor := "🟢"
-	if t.Health < 30 {
-		healthColor = "🔴"
-	} else if t.Health < 70 {
-		healthColor = "🟡"
-	}
+	healthColor := healthIcon(t.Health)
 	listStatus.AddItem(fmt.Sprintf(a.tr("Health: %s %s"), healthColor, healthBar), "", 0, nil)
 
 	// Energy bar
@@ -82,9 +77,9 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 	}
 	listStatus.AddItem(fmt.Sprintf(a.tr("Energy: %s %s"), energyColor, energyBar), "", 0, nil)
 
-	listStatus.AddItem(a.tr("Hygiene: ")+a.createProgressBar(hygieneLevel(t), 100), "", 0, nil)
-	listStatus.AddItem(fmt.Sprintf(a.tr("Cleanliness: %s"), a.createProgressBar(t.Cleanliness, 100)), "", 0, nil)
-	listStatus.AddItem(fmt.Sprintf("%s: %s", a.tr(ageCareLabel(t)), a.createProgressBar(ageCareLevel(t), 100)), "", 0, nil)
+	listStatus.AddItem(a.tr("Hygiene: ")+"🧴 "+a.createProgressBar(hygieneLevel(t), 100), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf(a.tr("Cleanliness: %s"), "🧼 "+a.createProgressBar(t.Cleanliness, 100)), "", 0, nil)
+	listStatus.AddItem(fmt.Sprintf("%s: %s", a.tr(ageCareLabel(t)), ageCareIcon(t)+" "+a.createProgressBar(ageCareLevel(t), 100)), "", 0, nil)
 
 	listStatus.AddItem(a.recoveryStatus(t), "", 0, nil)
 
@@ -364,4 +359,14 @@ var adultSprites = map[string]string{
     /   \ 
    _\   /_
 `,
+}
+
+func healthIcon(health int) string {
+	if health < 30 {
+		return "💔"
+	}
+	if health < 70 {
+		return "💛"
+	}
+	return "💚"
 }

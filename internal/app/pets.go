@@ -42,6 +42,12 @@ func ageCareLabel(t Tamagotchi) string {
 	}
 	return "Brushing"
 }
+func ageCareIcon(t Tamagotchi) string {
+	if needsDiaper(t) {
+		return "🧷"
+	}
+	return "🪮"
+}
 func ageCareKind(t Tamagotchi) string {
 	if needsDiaper(t) {
 		return "diaper"
