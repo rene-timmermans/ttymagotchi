@@ -30,13 +30,13 @@ Download the matching **x86_64** installer from
 
 ```sh
 # Arch Linux / SteamOS desktop mode (where system package installation is enabled)
-sudo pacman -U ./ttymagotchi-0.3.0-1-x86_64.pkg.tar.zst
+sudo pacman -U ./ttymagotchi-0.3.1-1-x86_64.pkg.tar.zst
 
 # Debian / Ubuntu
-sudo apt install ./ttymagotchi_0.3.0-1_amd64.deb
+sudo apt install ./ttymagotchi_0.3.1-1_amd64.deb
 
 # Fedora
-sudo dnf install ./ttymagotchi-0.3.0-1.x86_64.rpm
+sudo dnf install ./ttymagotchi-0.3.1-1.x86_64.rpm
 ```
 
 Packages install `/usr/bin/ttymagotchi` and an application menu entry that opens a
@@ -50,9 +50,9 @@ continue to install the upstream project.
 This also works without modifying the system, including on Steam Deck:
 
 ```sh
-tar xzf ttymagotchi-0.3.0-linux-amd64.tar.gz
+tar xzf ttymagotchi-0.3.1-linux-amd64.tar.gz
 mkdir -p ~/.local/bin
-install -m755 ttymagotchi-0.3.0/bin/ttymagotchi ~/.local/bin/ttymagotchi
+install -m755 ttymagotchi-0.3.1/bin/ttymagotchi ~/.local/bin/ttymagotchi
 ~/.local/bin/ttymagotchi
 ```
 

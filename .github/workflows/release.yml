@@ -45,7 +45,7 @@ jobs:
           FAMILY: ${{ matrix.family }}
         run: |
           case "$FAMILY" in
-            debian) apt-get update && apt-get install -y --no-install-recommends git python3 binutils ;;
+            debian) apt-get update && apt-get install -y --no-install-recommends ca-certificates git python3 binutils ;;
             fedora) dnf install -y rpm-build git python3 ;;
             arch) pacman-key --init && pacman-key --populate archlinux && pacman -Sy --noconfirm archlinux-keyring && pacman -Syu --noconfirm --needed base-devel git python ;;
           esac

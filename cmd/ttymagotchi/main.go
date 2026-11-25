@@ -9,7 +9,7 @@ import (
 	"github.com/rene-timmermans/ttymagotchi/internal/config"
 )
 
-var version = "0.3.0-dev"
+var version = "0.3.1-dev"
 
 func main() {
 	showVersion := flag.Bool("version", false, "print version and exit")
