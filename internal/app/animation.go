@@ -9,7 +9,7 @@ import (
 
 const sceneWidth, sceneHeight = 68, 18
 
-// A fixed-size scene preserves the pet's position while effects move around it.
+// A fixed-size scene preserves the pet's position while its body animates.
 // Grapheme widths keep emoji food and the egg aligned with terminal cells.
 type spriteScene [sceneHeight][sceneWidth]string
 
@@ -159,80 +159,26 @@ func renderActionSprite(t Tamagotchi, kind string, index int, elapsed time.Durat
 		width = max(width, uniseg.StringWidth(line))
 	}
 	x, y := (sceneWidth-width)/2, 1
-	faceRow, mouthRow, mouthCol, waistRow := 1, 2, mouthColumn(t.Stage), min(3, len(pose)-1)
-	if growthIndex(t.Stage) == 0 {
-		faceRow, mouthRow, mouthCol, waistRow = 5, 6, 11, 8
-	} else if knownSpecies(t.Species) {
+	mouthRow, mouthCol := 6, 11
+	if growthIndex(t.Stage) > 0 && knownSpecies(t.Species) {
 		model := animalModel(t)
-		faceRow, mouthRow, mouthCol, waistRow = model.faceRow, model.mouthRow, model.mouthCol, model.waistRow
-	}
-	if kind == "wash" {
-		x += frame % 2
-	}
-	if kind == "sleep" {
-		y += frame % 2
+		mouthRow, mouthCol = model.mouthRow, model.mouthCol
 	}
 	for row, line := range pose {
 		s.put(x, y+row, line)
 	}
-	faceY := y + faceRow
-	mouthY := y + mouthRow
 	switch kind {
 	case "food":
-		icon := strings.Fields(availableFoods[index].Name)[0]
-		if elapsed < 1500*time.Millisecond {
-			// The selected food travels straight toward the mouth in the pet scene.
-			foodX := 2 + (x+mouthCol-2)*min(12, int(elapsed/(125*time.Millisecond)))/12
-			s.put(foodX, mouthY, icon)
-		} else if frame%2 == 0 {
-			s.put(x+10, mouthY, "·")
-			s.put(x+9, mouthY+1, "·")
+		// Hold the selected food at the mouth instead of flying it across the scene.
+		if elapsed < 1500*time.Millisecond && frame%3 != 2 {
+			icon := strings.Fields(availableFoods[index].Name)[0]
+			s.put(x+mouthCol, y+mouthRow, icon)
 		}
 	case "sleep":
-		// Zs rise from the head, alongside the breathing body.
-		s.put(x+width+2, faceY, "Zzz")
-		s.put(x+width+5, faceY-1-frame%2, "Z")
-		s.put(x+width+7, 0, "Z")
-		s.put(x-2, y+len(pose), "("+strings.Repeat("_", width+2)+")")
-	case "wash":
-		// Falling water, bubbles on the body and a sponge moving over the fur.
-		for i := 0; i < 4; i++ {
-			s.put(x-2+i*4, (frame+i)%2, "│")
-		}
-		s.put(x-2, faceY+frame%3, "o")
-		s.put(x+width+1, faceY+(frame+1)%3, "O")
-		s.put(x+mouthCol-3+frame%5, y+waistRow, "▣▣")
-		water := []string{strings.Repeat("~ ", width/2+2), strings.Repeat(" ~", width/2+2)}
-		s.put(x-2, y+len(pose)-1, water[frame%2])
-		s.put(x-3, y+len(pose), "\\"+strings.Repeat("_", width+4)+"/")
-	case "diaper":
-		waistY := y + waistRow
-		if frame < 5 {
-			s.put(x+mouthCol-4, waistY, "\\__###__/")
-		} else if frame < 10 {
-			s.put(x+mouthCol-4+frame%5, waistY, "▱▱")
-		} else {
-			s.put(x+mouthCol-4, waistY, "\\___♡___/")
-		}
+		// Keep the requested Zzz close to the head; breathing comes from the body.
 		if frame%2 == 0 {
-			s.put(x-2, faceY, "✧")
-		} else {
-			s.put(x+width+1, faceY, "✧")
+			s.put(x+width-5, y, "Zzz")
 		}
-
-	case "brush":
-		// The bristles touch the coat and sweep across the chest and lower body.
-		brushY := y + waistRow + (frame/4)%2
-		brushX := x + mouthCol - 5 + frame%8
-		s.put(brushX, brushY-1, "╭────╮")
-		s.put(brushX, brushY, "┴┴┴┴┴┴")
-		s.put(brushX+5, brushY-1, "──")
-		if frame%2 == 0 {
-			s.put(x-2, faceY, "✧")
-		} else {
-			s.put(x+width+1, faceY, "✧")
-		}
-
 	}
 	return s.String()
 }

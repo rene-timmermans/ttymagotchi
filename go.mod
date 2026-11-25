@@ -1,4 +1,4 @@
-module github.com/ezeoleaf/termagotchi
+module github.com/rene-timmermans/ttymagotchi
 
 go 1.24.0
 

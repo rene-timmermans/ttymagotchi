@@ -1,7 +1,7 @@
 {
   "Language: %s": "Taal: %s",
   "Current Form": "Huidige verschijning",
-  " Termagotchi • Activity ": " Termagotchi • Activiteit ",
+  " ttymagotchi • Activity ": " ttymagotchi • Activiteit ",
   "Name: %s": "Naam: %s",
   "Age: %d days": "Leeftijd: %d dagen",
   "Stage: %s": "Fase: %s",
@@ -197,7 +197,7 @@
   "Restart": "Opnieuw beginnen",
   "Are you sure you want to restart?\n\nThis will reset your tamagotchi to a new egg.\nAll progress will be lost!": "Weet je zeker dat je opnieuw wilt beginnen?\n\nJe tamagotchi wordt vervangen door een nieuw ei.\nAlle voortgang gaat verloren!",
   "Esc / Ctrl+S Status | Ctrl+F Feed | Ctrl+P Play | Ctrl+L Sleep\nCtrl+Y Hygiene | Ctrl+O Options | Ctrl+E Events\nCtrl+H Help | Ctrl+R Restart | Ctrl+C Quit": "Esc / Ctrl+S Status | Ctrl+F Voeren | Ctrl+P Spelen | Ctrl+L Slapen\nCtrl+Y Hygiëne | Ctrl+O Opties | Ctrl+E Logboek\nCtrl+H Hulp | Ctrl+R Opnieuw beginnen | Ctrl+C Afsluiten",
-  "=== TERMAGOTCHI HELP ===": "=== TERMAGOTCHI-HULP ===",
+  "=== TTYMAGOTCHI HELP ===": "=== TTYMAGOTCHI-HULP ===",
   "CARE & HEALTH": "VERZORGING EN GEZONDHEID",
   "Hunger: 0 = Full, 100 = Starving": "Honger: 0 = verzadigd, 100 = uitgehongerd",
   "Happiness: 0 = Very Sad, 100 = Very Happy": "Geluk: 0 = heel verdrietig, 100 = heel blij",

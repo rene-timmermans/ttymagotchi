@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=ttymagotchi
+Comment=An animated virtual pet for your terminal
+Exec=ttymagotchi
+Icon=utilities-terminal
+Terminal=true
+Categories=Game;Simulation;
+Keywords=pet;tamagotchi;terminal;

@@ -1,7 +1,7 @@
 {
   "Language: %s": "Langue : %s",
   "Current Form": "Apparence",
-  " Termagotchi • Activity ": " Termagotchi • Activité ",
+  " ttymagotchi • Activity ": " ttymagotchi • Activité ",
   "Name: %s": "Nom : %s",
   "Age: %d days": "Âge : %d jours",
   "Stage: %s": "Stade : %s",
@@ -197,7 +197,7 @@
   "Restart": "Recommencer",
   "Are you sure you want to restart?\n\nThis will reset your tamagotchi to a new egg.\nAll progress will be lost!": "Voulez-vous vraiment recommencer ?\n\nVotre tamagotchi redeviendra un nouvel œuf.\nToute la progression sera perdue !",
   "Esc / Ctrl+S Status | Ctrl+F Feed | Ctrl+P Play | Ctrl+L Sleep\nCtrl+Y Hygiene | Ctrl+O Options | Ctrl+E Events\nCtrl+H Help | Ctrl+R Restart | Ctrl+C Quit": "Échap / Ctrl+S État | Ctrl+F Nourrir | Ctrl+P Jouer | Ctrl+L Dormir\nCtrl+Y Hygiène | Ctrl+O Options | Ctrl+E Journal\nCtrl+H Aide | Ctrl+R Recommencer | Ctrl+C Quitter",
-  "=== TERMAGOTCHI HELP ===": "=== AIDE TERMAGOTCHI ===",
+  "=== TTYMAGOTCHI HELP ===": "=== AIDE TTYMAGOTCHI ===",
   "CARE & HEALTH": "SOINS ET SANTÉ",
   "Hunger: 0 = Full, 100 = Starving": "Faim : 0 = rassasié, 100 = affamé",
   "Happiness: 0 = Very Sad, 100 = Very Happy": "Bonheur : 0 = très triste, 100 = très heureux",

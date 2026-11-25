@@ -2,15 +2,15 @@
 
 # Build the application
 build:
-	go build -o bin/termagotchi cmd/termagotchi/main.go
+	go build -trimpath -ldflags "-X main.version=$$(cat VERSION)" -o bin/ttymagotchi ./cmd/ttymagotchi
 
 # Run the application
 run: build
-	./bin/termagotchi
+	./bin/ttymagotchi
 
 # Clean build artifacts
 clean:
-	rm -f bin/termagotchi
+	rm -f bin/ttymagotchi
 
 lint:
 	golangci-lint run
@@ -26,7 +26,7 @@ deps:
 # Show help
 help:
 	@echo "Available commands:"
-	@echo "  build  - Build the termagotchi application"
+	@echo "  build  - Build the ttymagotchi application"
 	@echo "  run    - Build and run the application"
 	@echo "  clean  - Remove build artifacts"
 	@echo "  test   - Run tests"

@@ -1,0 +1,59 @@
+{
+  "renderer_source_sha256": "d9778a2b35b729bc34a28e8044bd8607f3805fef8beefdb481d7f7a5f093fc7c",
+  "cards": 1852,
+  "frames_covered": 4550,
+  "sections": {
+    "Growth": 50,
+    "Expressions": 350,
+    "Idle": 150,
+    "Care": 910,
+    "Food": 350,
+    "Legacy": 20,
+    "Games": 18,
+    "Dialogs": 4
+  },
+  "artifacts": [
+    {
+      "file": "all-art.png",
+      "width": 12000,
+      "height": 20012,
+      "bytes": 1393475
+    },
+    {
+      "file": "cat.png",
+      "width": 3600,
+      "height": 13012,
+      "bytes": 346996
+    },
+    {
+      "file": "dog.png",
+      "width": 3600,
+      "height": 13012,
+      "bytes": 350257
+    },
+    {
+      "file": "rabbit.png",
+      "width": 3600,
+      "height": 13012,
+      "bytes": 359545
+    },
+    {
+      "file": "guinea_pig.png",
+      "width": 3600,
+      "height": 13012,
+      "bytes": 345289
+    },
+    {
+      "file": "penguin.png",
+      "width": 3600,
+      "height": 13245,
+      "bytes": 366023
+    },
+    {
+      "file": "overview.png",
+      "width": 2400,
+      "height": 4164,
+      "bytes": 133804
+    }
+  ]
+}

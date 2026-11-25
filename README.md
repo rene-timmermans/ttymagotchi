@@ -1,231 +1,284 @@
-## Local interactive edition
+# ttymagotchi 🐾
 
-Based on upstream v0.2.0. Source: `/home/deck/Documenten/Codex/Termagotchi`.
+An animated virtual pet for your terminal. Hatch a mystery egg, raise a cat, dog,
+rabbit, guinea pig or penguin, and care for it through ten growth stages.
 
-- New pets also receive a random name from the 100 most common Dutch first given names. Source: [Nederlandse Voornamenbank, Meertens Instituut KNAW (2022)](https://nvb.meertens.knaw.nl/downloads/Top_eerste_voornamen_NL_2022.zip), combining female and male carrier counts. Every name in the pool has equal selection probability. Existing saved names stay unchanged; a new game/restart draws a new name.
-- New pets randomly become a cat, dog, rabbit, guinea pig or penguin (Tux). All start in the same mystery egg; their species is revealed only after hatching and saved across restarts. Existing saves receive a species once; their pet stats are preserved.
-- Each species has ten appearances: Egg, Hatchling, Baby, Toddler, Youngster, Child, Preteen, Teen, Adolescent, Adult. They arrive at ages 0, 1, 2, 3, 4, 5, 7, 9, 12 and 14 days. Status shows the current stage out of ten.
-- Pets and care scenes use larger, detailed terminal drawings (roughly four times the former figure area), with blinking, tails, ears or feet moving on Status. Food and washing effects use each species’ face and body positions.
-- Diaper care is required in stages 1–3 (Egg, Hatchling, Baby); from stage 4 (Toddler) it is replaced by Brushing. Only the active age-specific bar appears and counts for Hygiene, Happiness, health damage and recovery. Diapers change only at four or five randomly timed bowel events per normal game day, dropping 35 points each (100 → 65 → 30 → 0); Brushing loses a point every 21 periods (100 → 0 in seven days at 50% speed). The transition starts Brushing at 100% with no old diaper penalty. The daily event count, randomized schedule, progress and next event persist across restarts and offline time; changing a diaper does not delay bowel events. The rhythm scales with speed. Both care actions animate the pet and persist separately.
-- Each of the eight Play actions has a distinct three-round minigame: Play Ball uses a timing marker; Run Around dodges six lane obstacles; Sing Songs follows notes with 1–3; Draw Pictures traces an outline; Solve Puzzle repeats a hidden arrow sequence; Dance Party follows visible arrows; Read Books identifies the first letter of a localized word; Hide & Seek tracks a box through swaps. Scores determine rewards.
-- Press Enter to begin. Each minigame explains its own keys: Space, arrows/WASD or 1–3. A round has a time limit; Esc cancels unfinished games without changing stats.
-- Happiness, health and weight loss scale with the number of successful rounds. Completing a game spends its listed energy even on a zero score. The list shows maximum rewards.
-- Esc and Ctrl+S always return directly to Status, including from activities and the restart dialog. An unfinished game is cancelled without rewards; accepted food/care is applied once; an unconfirmed refused meal is discarded. Enter returns from a result to its activity menu. Ctrl+C exits and saves normally.
-- At hunger 0, selecting food first shows a localized head-shaking “No!” and a health-cost warning. Stop feeding is the default. After the animation (or Enter to show choices), use Left/Right + Enter or 1/2 to stop or explicitly feed anyway. Escape and Ctrl+S stop without applying food. Continuing starts the normal meal animation and applies its health penalty once; potentially fatal feeding is clearly marked.
-- Feeding shows a three-second animation with approaching food, chewing and a result showing stat changes. Esc finishes the meal and returns to Status; each meal is applied exactly once.
-- The pet itself animates in every life stage: feeding opens and closes its mouth as food approaches its face; sleeping closes its eyes and moves its breathing body with rising Zzz; washing moves a sponge over its body in a bubbly bath; Brushing moves the brush through the coat. Esc finishes care once and returns to Status.
-- Six Happiness expressions run from delighted through content and neutral to worried, sad and tearful. The same expression is used during care and on result screens. Neglected hygiene, hunger or exhaustion gradually lowers Happiness too.
-- Every status bar displays changes of 1% using partial blocks. Select a need with the arrow keys and press Enter: Hunger opens Feed, Happiness opens Play, Energy opens Sleep, Hygiene opens care choices; Cleanliness starts washing, and Diaper/Brushing starts the age-specific action. Health and Recovery open the care and recovery explanation.
-- Ctrl+Y opens Hygiene. Cleanliness and the age-specific care need decay independently. At 20% and below each causes 1–5 health damage per decay tick, increasing toward zero. The overall Hygiene bar shows the lowest active need. Washing restores cleanliness; brushing restores coat care. These stop neglect damage but do not directly heal existing damage.
-- Excess nutrition damages health by half the excess (minimum 5). Feeding at hunger 0 therefore always causes damage. Hunger at 90 or higher causes 2 health damage per decay tick. Health 0 immediately means death, which ordinary care cannot reverse.
-- Sustained good care restores +1 health every five decay periods (24 minutes at normal 50% speed). Happiness, Energy, Cleanliness and the active Diaper/Brushing bar must all stay at least 40%, with Hunger at most 60%. Any lapse or overfeeding resets recovery progress. This can heal an ill pet below 40 health, caps at 100, scales with speed and also works offline. Sleep and minigames retain their immediate health rewards.
-- Ctrl+O opens Options with English, Français, Español, Deutsch and Nederlands. Choose a language with Enter, or use Left/Right on the language rows to cycle. Menus, instructions, care results, dialogs, species/stage names, Help and existing event-log entries switch immediately. Pet names stay intact, and the language saves immediately; older saves default to English. Translation catalogs live in `internal/app/locales/`.
-- Pets refuse to sleep above 60% Energy, shaking their head with a localized red “No!” animation. Refusal grants no energy, health or happiness and does not change the last-sleep timestamp. At exactly 60% or below sleep works normally.
-- Ctrl+O opens Options. Left/Right or +/- adjusts speed by 1%, Page Up/Down by 10%; Enter selects a preset. Speed 0% means one week, 50% (default) eight hours, and 100% five minutes for hunger 0 → 100. Intermediate values use a smooth geometric scale. Energy, hygiene and neglect scale with this speed; animations remain short. Offline time counts at the saved speed.
-- Settings save immediately. Hygiene values, care timestamps, recovery progress and fractional decay progress persist. Older saves start with clean hygiene and 50% speed; existing pet stats are preserved.
-
-Build and install for this user:
-
-```sh
-go test -race ./...
-go vet ./...
-go build -o bin/termagotchi ./cmd/termagotchi
-install -Dm755 bin/termagotchi /home/deck/.local/bin/termagotchi
-```
-
-The end-to-end terminal check uses an isolated save: `python3 scripts/smoke_test.py bin/termagotchi adult en` (also accepts egg/hatchling/baby and fr/es/de/nl).
-
-Run `termagotchi` in a new terminal. The user binary takes precedence over the AUR binary; `/usr/bin/termagotchi` still runs the original version. Avoid running both against the same save at once.
-
----
-
-# Termagotchi 🐾
-
-A terminal-based Tamagotchi simulation written in Go, featuring a simple and hacky TUI interface.
+**This is a fork of [Termagotchi](https://github.com/ezeoleaf/termagotchi) by
+[Eze Olea Figueroa](https://github.com/ezeoleaf), based on v0.2.0.** The original
+project, history and MIT license are preserved. ttymagotchi adds interactive games,
+animated care, five species, realistic care timing and five interface languages.
 
 ## Features
 
-- 🎮 **Interactive TUI**: Beautiful terminal user interface with keyboard navigation
-- 🐾 **Digital Pet Care**: Feed, play, and put your tamagotchi to sleep
-- 📊 **Real-time Stats**: Monitor hunger, happiness, health, and energy levels
-- 🔄 **Life Stages**: Watch your tamagotchi evolve from egg to adult
-- 📝 **Event History**: Track all interactions and milestones
-- 💾 **Auto-save**: Progress is automatically saved to your config directory
-- ⏰ **Time-based Mechanics**: Stats change over time, requiring regular care
-- 🔄 **Restart Feature**: Reset to a new tamagotchi with confirmation modal
+- Five randomly assigned species, each with ten growth forms; all start in the same mystery egg.
+- Random names drawn from the 100 most common Dutch first names.
+- Large animated ASCII pets with blinking, moving ears/tails and expressions that follow Happiness.
+- Eight distinct playable minigames; performance determines rewards.
+- Animated feeding, sleeping, washing, diaper changes and brushing.
+- Health consequences for starvation, overfeeding and poor hygiene; sustained good care restores health.
+- A clear animated **No!** when your pet is full or too energetic to sleep.
+- Discrete diaper accidents, gradual adult brushing needs, and speed settings from a week to five minutes.
+- English, Nederlands, Français, Español and Deutsch, switchable in Options.
+- Keyboard navigation, one-percent status bars, event history and saved offline progression.
 
 ## Installation
 
-### Homebrew (recommended, after release)
+### Linux packages (Arch, Debian / Ubuntu, Fedora)
+
+Download the matching **x86_64** installer from
+[Releases](https://github.com/rene-timmermans/ttymagotchi/releases/latest), then run:
 
 ```sh
-brew tap ezeoleaf/tap
-brew install termagotchi
+# Arch Linux / SteamOS desktop mode (where system package installation is enabled)
+sudo pacman -U ./ttymagotchi-0.3.0-1-x86_64.pkg.tar.zst
+
+# Debian / Ubuntu
+sudo apt install ./ttymagotchi_0.3.0-1_amd64.deb
+
+# Fedora
+sudo dnf install ./ttymagotchi-0.3.0-1.x86_64.rpm
 ```
 
-### Download a Release
+Packages install `/usr/bin/ttymagotchi` and an application menu entry that opens a
+terminal. A terminal with UTF-8, emoji support and a monospace font is recommended.
+Check downloaded files against the release's `SHA256SUMS` with `sha256sum -c`.
+These packages belong to this fork; the original Termagotchi AUR/Homebrew packages
+continue to install the upstream project.
 
-- Go to [Releases](https://github.com/ezeoleaf/termagotchi/releases) and download the binary for your OS.
-- Unpack and move it to a directory in your `$PATH` (e.g., `/usr/local/bin`).
+### Portable Linux binary
 
-### Build from Source
+This also works without modifying the system, including on Steam Deck:
 
-#### Prerequisites
-
-- Go 1.24.0 or later
-
-```bash
-git clone <repository-url>
-cd termagotchi
-go mod tidy
-go build -o termagotchi cmd/termagotchi/main.go
-./termagotchi
+```sh
+tar xzf ttymagotchi-0.3.0-linux-amd64.tar.gz
+mkdir -p ~/.local/bin
+install -m755 ttymagotchi-0.3.0/bin/ttymagotchi ~/.local/bin/ttymagotchi
+~/.local/bin/ttymagotchi
 ```
+
+### From source
+
+Requires Go 1.24 or newer:
+
+```sh
+git clone https://github.com/rene-timmermans/ttymagotchi.git
+cd ttymagotchi
+make build
+./bin/ttymagotchi
+```
+
+Or use `go install github.com/rene-timmermans/ttymagotchi/cmd/ttymagotchi@latest`.
+The source supports Go's terminal platforms; this release's native installers and
+portable executable target Linux x86_64.
 
 ## Usage
 
+Run `ttymagotchi` in a terminal. `ttymagotchi --version` prints the build version.
+
 ### Controls
 
-- **Ctrl+S**: Status - View tamagotchi stats
-- **Ctrl+F**: Feed - Give food to tamagotchi
-- **Ctrl+P**: Play - Play games with tamagotchi
-- **Ctrl+L**: Sleep - Put tamagotchi to sleep
-- **Ctrl+E**: Events - View game history
-- **Ctrl+H**: Help - Show help page
-- **Ctrl+R**: Restart - Reset tamagotchi to new egg
-- **Ctrl+C**: Quit - Exit the game
+| Key | Action |
+| --- | --- |
+| Esc / Ctrl+S | Return to Status |
+| Ctrl+F | Feed |
+| Ctrl+P | Play |
+| Ctrl+L | Sleep |
+| Ctrl+Y | Hygiene |
+| Ctrl+O | Options: language and speed |
+| Ctrl+E | Event history |
+| Ctrl+H | Help and care guidance |
+| Ctrl+R | Restart with a new random egg and name (confirmation required) |
+| Ctrl+C | Save and quit |
 
 ### Navigation
 
-- Use arrow keys to navigate lists
-- Press Enter to select items
-- Use Ctrl+key shortcuts for quick access
+Use arrows and Enter in menus. On Status, select a bar and press Enter: Hunger
+opens Feed, Happiness opens Play, Energy opens Sleep, and Hygiene opens care.
+Cleanliness starts washing directly; Diaper or Brushing starts the appropriate
+care action. Health and Recovery open care guidance.
+
+Each minigame displays its controls. Esc cancels an unfinished game without its
+rewards or energy cost. During food/care, Esc finishes the selected action once
+and returns to Status. In the full-stomach decision, Esc stops unconfirmed feeding.
 
 ## Game Mechanics
 
 ### Stats
 
-- **Hunger**: 0 = Full, 100 = Starving
-- **Happiness**: 0 = Very Sad, 100 = Very Happy
-- **Health**: 0 = Sick, 100 = Healthy
-- **Energy**: 0 = Tired, 100 = Energetic
+| Stat | Meaning and care |
+| --- | --- |
+| Hunger | 0% is full; 100% is starving. Feed before it reaches 90%. |
+| Happiness | Play games; facial expressions become sadder as this falls. |
+| Health | 0% means death. Overfeeding, starvation and neglected hygiene cause damage. |
+| Energy | Sleeping restores it. Above 60%, your pet refuses to sleep. |
+| Hygiene | Overall hygiene indicator, combining the active care needs. |
+| Cleanliness | Wash your pet to restore this to 100%. |
+| Diaper | Active during stages 1–3. Four or five accidents per normal day, each costing 35 points. |
+| Brushing | Replaces Diaper from stage 4. Declines slowly: about seven normal days from 100 to 0. |
+| Recovery | Shows whether care is sufficient for gradual health recovery. |
+
+Bars display one-percent changes. At 20% or less, neglected cleanliness and the
+active Diaper/Brushing need damage health, increasingly strongly toward zero.
+Starvation starts damaging health at Hunger 90%. Overfeeding costs at least five
+health, increasing with excess food. At Hunger 0, the pet protests and shows the
+cost before you choose **Stop feeding** or **Feed anyway**; Stop is the default.
+A potentially fatal choice is explicitly marked.
+
+Keep Happiness, Energy and active hygiene needs at least 40%, and Hunger no higher
+than 60%, continuously to recover one health point every 24 minutes at normal
+speed. A lapse or overfeeding resets recovery progress. Death is permanent for
+that pet; restarting creates a new egg. Sleep and successful games can also award
+health according to the selected activity.
 
 ### Life Stages
 
-1. **Egg** (0-1 days)
-2. **Baby** (1-3 days)
-3. **Child** (3-7 days)
-4. **Teen** (7-14 days)
-5. **Adult** (14+ days)
+| Stage | Form | Age in days |
+| --- | --- | --- |
+| 1 | Egg | 0 |
+| 2 | Hatchling | 1 |
+| 3 | Baby | 2 |
+| 4 | Toddler | 3 |
+| 5 | Youngster | 4 |
+| 6 | Child | 5 |
+| 7 | Preteen | 7 |
+| 8 | Teen | 9 |
+| 9 | Adolescent | 12 |
+| 10 | Adult | 14 |
+
+A mystery egg hides the species until hatching. A new pet randomly becomes a cat,
+dog, rabbit, guinea pig or penguin (Tux). Growth follows elapsed calendar days;
+the speed setting adjusts needs and their health effects. Diaper care ends after
+the Baby stage; Brushing takes its place at Toddler.
 
 ### Food Types
 
-- 🍎 Apple: Good nutrition, low weight gain
-- 🍕 Pizza: High nutrition and happiness
-- 🥗 Salad: Healthy option
-- 🍔 Burger: High nutrition but heavy
-- 🍦 Ice Cream: High happiness boost
-- 🥕 Carrot: Balanced nutrition
-- 🍫 Chocolate: Happiness boost
-- 🥩 Steak: Maximum nutrition
+Apple, Pizza, Salad, Burger, Ice Cream, Carrot, Chocolate and Steak offer different
+nutrition, Happiness, Energy and weight effects. The Feed menu shows exact values.
+Feeding animates food held at the mouth and the pet chewing it. Pay attention
+to nutrition compared with remaining Hunger to avoid overfeeding.
 
 ### Games
 
-- 🎾 Play Ball: Classic fun
-- 🏃‍♂️ Run Around: Good exercise
-- 🎵 Sing Songs: Low energy, high happiness
-- 🎨 Draw Pictures: Creative fun
-- 🧩 Solve Puzzle: Mental stimulation
-- 🎭 Dance Party: High energy fun
-- 📚 Read Books: Educational
-- 🎪 Play Hide & Seek: Interactive fun
+Every Play activity triggers its own three-round minigame:
+
+| Activity | Challenge |
+| --- | --- |
+| Play Ball | Press Space when the marker reaches the target zone. |
+| Run Around | Dodge obstacles with Left/Right or A/D. |
+| Sing Songs | Select the requested notes with 1–3. |
+| Draw Pictures | Trace an outline clockwise with arrows or WASD. |
+| Solve Puzzle | Remember and repeat a hidden arrow sequence. |
+| Dance Party | Follow the displayed arrows. |
+| Read Books | Choose the first letter of a localized word with 1–3. |
+| Play Hide & Seek | Follow shuffled boxes and choose with 1–3. |
+
+Score scales Happiness, Health and weight rewards. Completing a game costs the
+activity's listed Energy; canceling an unfinished game applies no result.
 
 ### Sleep Options
 
-- 😴 Short Nap (30 min): Quick energy boost
-- 😪 Medium Sleep (2 hours): Balanced rest
-- 😴 Long Sleep (6 hours): Good recovery
-- 😴 Full Night (8 hours): Complete restoration
+Choose an option in Sleep to restore the listed Energy and Health. Your pet closes
+its eyes, settles down and displays animated Zzz. With Energy above 60%, it shakes
+its head and says **No!**; no sleep reward is granted.
 
 ## Tips for Success
 
-1. **Feed Regularly**: Keep hunger below 80 to maintain happiness
-2. **Play Often**: Increase happiness and health through games
-3. **Rest When Needed**: Put to sleep when energy is low
-4. **Monitor Health**: Low health can lead to death
-5. **Balance Stats**: Keep all stats in good ranges
-6. **Restart When Needed**: Use Ctrl+R to start fresh if your tamagotchi dies
+- At the default 50% speed, Hunger takes eight hours to go from full to starving: plan roughly three meals a day.
+- Use food portions that fit the remaining Hunger rather than repeatedly feeding a full pet.
+- Keep care needs above 40% for sustained recovery; attend to hygiene before it falls to 20%.
+- A diaper accident is a sudden 35-point drop, rather than a continuously draining timer.
+- Play for Happiness and watch your pet's expression for an early sign of neglect.
+- Set a slower pace in Options if you will be away; offline time still counts.
 
 ## Configuration
 
-The game automatically saves your progress to:
+Settings and your pet are stored in the platform's user configuration directory:
+`~/.config/ttymagotchi/config.yml` on Linux (or `$XDG_CONFIG_HOME/ttymagotchi/config.yml`).
+Language, speed and care progress persist automatically. On first use after renaming,
+if no ttymagotchi save exists, an existing `termagotchi/config.yml` is imported.
+The old save remains untouched; subsequent saves use the new directory.
 
-- **macOS**: `~/Library/Application Support/termagotchi/config.yml`
-- **Linux**: `~/.config/termagotchi/config.yml`
-- **Windows**: `%APPDATA%\termagotchi\config.yml`
+In Options, Left/Right or +/- adjusts speed from 0 to 100:
+
+| Speed | Time for Hunger 0 → 100% |
+| --- | --- |
+| 0% | One week |
+| 50% (default) | Eight hours |
+| 100% | Five minutes |
+
+Intermediate settings interpolate geometrically. Other need changes, diaper
+schedules, health damage and recovery scale with this pace. Animation playback
+duration stays the same. Languages switch immediately and save with your pet.
 
 ## Screenshots
 
-Home
+![ASCII art and animation review overview](docs/gallery/overview.png)
 
-<img width="782" height="450" alt="image" src="https://github.com/user-attachments/assets/39cf86c2-a318-4140-8e07-ba252d38f3c3" />
+[Complete PNG atlas](docs/gallery/all-art.png) · [Cat](docs/gallery/cat.png) ·
+[Dog](docs/gallery/dog.png) · [Rabbit](docs/gallery/rabbit.png) ·
+[Guinea pig](docs/gallery/guinea_pig.png) · [Penguin](docs/gallery/penguin.png)
 
-Feed
-
-<img width="785" height="448" alt="image" src="https://github.com/user-attachments/assets/58d7897f-c55a-42e0-8a5f-072ebce347e4" />
-
-Play
-
-<img width="782" height="450" alt="image" src="https://github.com/user-attachments/assets/edffe7be-4c00-4e03-8c4c-ca6e2ce6e2af" />
-
-
-Help
-
-<img width="1025" height="647" alt="image" src="https://github.com/user-attachments/assets/ccad0600-d168-4d6f-bb90-10fcd366d78f" />
+The full 12,000 × 20,012 pixel atlas contains 1,852 distinct labeled cards covering
+4,550 animation-frame samples. Identical frames are grouped and labeled with their
+frame numbers. It includes all 50 growth forms, six living expressions plus death,
+idle and care frames, food icons, minigame screens and refusal choices. The original
+upstream sprites are included in a separately labeled legacy section.
+This is a static frame review, rendered directly from the game's ASCII functions.
 
 ## Development
 
+```sh
+make build
+go test -race ./...
+go vet ./...
+go build -tags artgallery ./cmd/artgallery
+python3 scripts/smoke_test.py bin/ttymagotchi egg nl
+```
+
+Regenerate the atlas with `python3 scripts/render_gallery.py` (Go, Pillow,
+DejaVu Sans Mono and a supported color emoji font). This tool never opens or
+changes your personal pet save. Tests use isolated configuration directories.
+
+Native release builds use `python3 scripts/prepare_release.py`, then
+`sh packaging/build.sh debian|fedora|arch dist dist` in the corresponding build
+environment with `dpkg-deb`, `rpmbuild` or `makepkg`. The Arch PKGBUILD and RPM recipe
+package the same static, tested executable as the Debian package. Release CI builds
+all three installers and verifies installation before publishing a versioned release.
+
 ### Project Structure
 
-```
-termagotchi/
-├── cmd/
-│   └── termagotchi/
-│       └── main.go
-├── internal/
-│   ├── app/
-│   │   ├── app.go
-│   │   ├── structs.go
-│   │   ├── pages.go
-│   │   ├── status.go
-│   │   ├── feed.go
-│   │   ├── play.go
-│   │   ├── sleep.go
-│   │   ├── events.go
-│   │   └── help.go
-│   └── config/
-│       └── config.go
-├── go.mod
-├── go.sum
-└── README.md
-```
+- `cmd/ttymagotchi/`: terminal application entry point.
+- `internal/app/`: simulation, pet art, animation, UI, minigames and locale catalogs.
+- `internal/config/`: persistence and legacy save import.
+- `cmd/artgallery/`, `scripts/`: optional gallery exporter, renderer and terminal smoke test.
+- `packaging/`: native package recipes, staging and terminal application entry.
+- `docs/gallery/`: review PNGs and generation manifest.
+- `.github/workflows/`: verification and tagged package releases.
 
 ### Dependencies
 
-- `github.com/gdamore/tcell/v2`: Terminal UI framework
-- `github.com/rivo/tview`: TUI components
-- `gopkg.in/yaml.v3`: Configuration file handling
+Go modules: [tview](https://github.com/rivo/tview),
+[tcell](https://github.com/gdamore/tcell),
+[uniseg](https://github.com/rivo/uniseg) and
+[yaml.v3](https://github.com/go-yaml/yaml). The Linux release executable is built
+with CGO disabled and requires no separate Go installation.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT, inherited from Termagotchi. See [LICENSE](LICENSE), including the original
+copyright notice: Copyright (c) 2025 Eze Olea Figueroa.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Issues and pull requests for this fork are welcome here. For the original project,
+please use [the upstream repository](https://github.com/ezeoleaf/termagotchi).
+Run the Go checks and relevant terminal smoke tests before submitting a change.
+The maintainer requests explicit confirmation before publishing each future change;
+see [AGENTS.md](AGENTS.md).
 
 ## Acknowledgments
 
-- Inspired by the classic Tamagotchi digital pet
-- Built with the amazing `tview` TUI framework
-- Thanks to the Go community for excellent libraries
+- **Eze Olea Figueroa** for creating [Termagotchi](https://github.com/ezeoleaf/termagotchi), its original game, ASCII art and MIT-licensed foundation.
+- Rene Timmermans for the ttymagotchi fork's direction and expanded care, animation and game design, implemented with Codex assistance.
+- [Nederlandse Voornamenbank / Meertens Instituut](https://nvb.meertens.knaw.nl/downloads/Top_eerste_voornamen_NL_2022.zip) for the 2022 first-name frequency data (male/female totals combined for the 100-name list).
+- The maintainers of the terminal UI, Unicode and YAML libraries listed above.

@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ezeoleaf/termagotchi/internal/config"
 	"github.com/gdamore/tcell/v2"
+	"github.com/rene-timmermans/ttymagotchi/internal/config"
 	"github.com/rivo/tview"
 )
 

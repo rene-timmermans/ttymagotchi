@@ -1,0 +1,10 @@
+Package: ttymagotchi
+Version: @VERSION@-1
+Section: games
+Priority: optional
+Architecture: amd64
+Maintainer: Rene Timmermans <352420374+rene-timmermans@users.noreply.github.com>
+Homepage: https://github.com/rene-timmermans/ttymagotchi
+Description: Animated virtual pets and interactive minigames in your terminal
+ Five species, ten growth stages, animated care and eight minigames.
+ Fork of Termagotchi by Eze Olea Figueroa, distributed under the MIT license.

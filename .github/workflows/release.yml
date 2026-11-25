@@ -1,32 +1,108 @@
-name: Build and Release
-
+name: Native packages and release
 on:
   push:
-    tags:
-      - "v*" # Only run on version tags like v1.0.0
-
+    tags: ['v*']
+permissions:
+  contents: read
 jobs:
-  build:
+  prepare:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
-
-      - name: Build binary
+          go-version-file: go.mod
+      - name: Verify release and build static executable
         run: |
-          mkdir -p dist
-          GOOS=darwin GOARCH=amd64 go build -o dist/termagotchi-darwin-amd64 ./cmd/termagotchi
-          GOOS=linux GOARCH=amd64 go build -o dist/termagotchi-linux-amd64 ./cmd/termagotchi
-          GOOS=windows GOARCH=amd64 go build -o dist/termagotchi-windows-amd64.exe ./cmd/termagotchi
-
-      - name: Upload binaries to release
-        uses: softprops/action-gh-release@v2
+          test "$GITHUB_REF_NAME" = "v$(cat VERSION)"
+          test -f "docs/releases/$(cat VERSION).md"
+          go test -race ./...
+          go vet ./...
+          python3 scripts/prepare_release.py
+          python3 scripts/smoke_test.py bin/ttymagotchi egg nl
+          python3 scripts/smoke_test.py bin/ttymagotchi adult en
+          git archive --format=tar.gz --prefix="ttymagotchi-$(cat VERSION)/" --output="dist/ttymagotchi-$(cat VERSION)-source.tar.gz" HEAD
+          cp docs/gallery/all-art.png dist/ttymagotchi-all-art.png
+      - uses: actions/upload-artifact@v4
         with:
-          files: dist/*
+          name: bundle
+          path: dist/*
+          if-no-files-found: error
+  package:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { family: debian, image: 'debian:trixie' }
+          - { family: fedora, image: 'fedora:latest' }
+          - { family: arch, image: 'archlinux:latest' }
+    container: ${{ matrix.image }}
+    steps:
+      - name: Native packaging tools
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FAMILY: ${{ matrix.family }}
+        run: |
+          case "$FAMILY" in
+            debian) apt-get update && apt-get install -y --no-install-recommends git python3 binutils ;;
+            fedora) dnf install -y rpm-build git python3 ;;
+            arch) pacman-key --init && pacman-key --populate archlinux && pacman -Sy --noconfirm archlinux-keyring && pacman -Syu --noconfirm --needed base-devel git python ;;
+          esac
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: bundle
+          path: dist
+      - name: Build and install native package
+        env:
+          FAMILY: ${{ matrix.family }}
+        run: |
+          sh packaging/build.sh "$FAMILY" dist dist
+          case "$FAMILY" in
+            debian) dpkg -i dist/*.deb ;;
+            fedora) dnf install -y ./dist/*.rpm ;;
+            arch) pacman -U --noconfirm dist/*.pkg.tar.zst ;;
+          esac
+          test "$(ttymagotchi --version)" = "ttymagotchi $(cat VERSION)"
+          test -s /usr/share/licenses/ttymagotchi/LICENSE
+          python3 scripts/smoke_test.py /usr/bin/ttymagotchi egg nl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.family }}
+          path: |
+            dist/*.deb
+            dist/*.rpm
+            dist/*.pkg.tar.zst
+          if-no-files-found: error
+  ubuntu:
+    needs: package
+    runs-on: ubuntu-latest
+    container: ubuntu:24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: package-debian
+          path: packages
+      - run: |
+          dpkg -i packages/*.deb
+          ttymagotchi --version
+  publish:
+    needs: [prepare, package, ubuntu]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: downloads
+          merge-multiple: true
+      - name: Checksums and release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd downloads
+          sha256sum * > SHA256SUMS
+          cd ..
+          gh release create "$GITHUB_REF_NAME" downloads/* --verify-tag --title "ttymagotchi $(cat VERSION)" --notes-file "docs/releases/$(cat VERSION).md"

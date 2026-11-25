@@ -32,7 +32,7 @@ func gameKind(index int) string {
 
 func (a *App) openActivity(kind string, index int) {
 	v := tview.NewTextView().SetDynamicColors(true).SetTextAlign(tview.AlignCenter)
-	v.SetBorder(true).SetTitle(a.tr(" Termagotchi • Activity ")).SetBorderColor(tcell.ColorLightCyan)
+	v.SetBorder(true).SetTitle(a.tr(" ttymagotchi • Activity ")).SetBorderColor(tcell.ColorLightCyan)
 	a.uiMu.Lock()
 	a.activityActive = true
 	a.uiMu.Unlock()

@@ -1,7 +1,7 @@
 {
   "Language: %s": "Language: %s",
   "Current Form": "Current Form",
-  " Termagotchi • Activity ": " Termagotchi • Activity ",
+  " ttymagotchi • Activity ": " ttymagotchi • Activity ",
   "Name: %s": "Name: %s",
   "Age: %d days": "Age: %d days",
   "Stage: %s": "Stage: %s",
@@ -197,7 +197,7 @@
   "Restart": "Restart",
   "Are you sure you want to restart?\n\nThis will reset your tamagotchi to a new egg.\nAll progress will be lost!": "Are you sure you want to restart?\n\nThis will reset your tamagotchi to a new egg.\nAll progress will be lost!",
   "Esc / Ctrl+S Status | Ctrl+F Feed | Ctrl+P Play | Ctrl+L Sleep\nCtrl+Y Hygiene | Ctrl+O Options | Ctrl+E Events\nCtrl+H Help | Ctrl+R Restart | Ctrl+C Quit": "Esc / Ctrl+S Status | Ctrl+F Feed | Ctrl+P Play | Ctrl+L Sleep\nCtrl+Y Hygiene | Ctrl+O Options | Ctrl+E Events\nCtrl+H Help | Ctrl+R Restart | Ctrl+C Quit",
-  "=== TERMAGOTCHI HELP ===": "=== TERMAGOTCHI HELP ===",
+  "=== TTYMAGOTCHI HELP ===": "=== TTYMAGOTCHI HELP ===",
   "CARE & HEALTH": "CARE & HEALTH",
   "Hunger: 0 = Full, 100 = Starving": "Hunger: 0 = Full, 100 = Starving",
   "Happiness: 0 = Very Sad, 100 = Very Happy": "Happiness: 0 = Very Sad, 100 = Very Happy",

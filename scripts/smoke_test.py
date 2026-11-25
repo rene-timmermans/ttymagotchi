@@ -14,14 +14,14 @@ import tempfile
 import termios
 import time
 
-binary = str(Path(sys.argv[1] if len(sys.argv) > 1 else "bin/termagotchi").resolve())
+binary = str(Path(sys.argv[1] if len(sys.argv) > 1 else "bin/ttymagotchi").resolve())
 pet_stage = sys.argv[2] if len(sys.argv) > 2 else "adult"
 language = sys.argv[3] if len(sys.argv) > 3 else "en"
 catalog = json.loads((Path(__file__).resolve().parent.parent / "internal/app/locales" / (language + ".json")).read_text())
 young = pet_stage in ("egg", "hatchling", "baby")
 care_field = "diaper" if young else "grooming"
-with tempfile.TemporaryDirectory(prefix="termagotchi-smoke-") as config_dir:
-    save_dir = Path(config_dir) / "termagotchi"
+with tempfile.TemporaryDirectory(prefix="ttymagotchi-smoke-") as config_dir:
+    save_dir = Path(config_dir) / "ttymagotchi"
     save_dir.mkdir()
     current_time = datetime.datetime.now(datetime.timezone.utc)
     now = current_time.isoformat()

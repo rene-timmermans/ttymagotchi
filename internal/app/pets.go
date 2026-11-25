@@ -81,7 +81,7 @@ type petModel struct {
 	faceRow, mouthRow, mouthCol, waistRow int
 }
 
-// Templates use anatomical anchors, so food, water and brushes follow the pet.
+// Templates use anatomical anchors so paws and held care tools follow the pet.
 // Each species has nine progressively larger forms after the shared mystery egg.
 func animalModel(t Tamagotchi) petModel {
 	level := max(1, growthIndex(t.Stage))
@@ -226,17 +226,8 @@ func animalPose(t Tamagotchi, kind string, frame int) []string {
 		line = strings.Replace(line, "{b}", emotion.brow, 1)
 		rows[i] = strings.NewReplacer("{e}", eyes, "{m}", mouth, "{b}", emotion.rightBrow()).Replace(line)
 	}
-	if t.IsAlive && (kind == "wash" || kind == "brush" || kind == "diaper") && frame%2 == 1 {
-		for i := range rows {
-			rows[i] = " " + rows[i]
-		}
-	}
-	if t.IsAlive && (kind == "brush" || kind == "diaper") {
-		if frame%2 == 0 {
-			rows[len(rows)-1] = strings.ReplaceAll(rows[len(rows)-1], "_", "/")
-		} else {
-			rows[len(rows)-1] = strings.ReplaceAll(rows[len(rows)-1], "_", "\\")
-		}
+	if t.IsAlive && (kind == "wash" || kind == "brush" || kind == "diaper" || kind == "food") {
+		rows = heldCarePose(rows, model, kind, frame)
 	}
 	if t.IsAlive && kind == "idle" {
 		if t.Species == "rabbit" && frame%2 == 1 {
@@ -269,6 +260,66 @@ func animalPose(t Tamagotchi, kind string, frame int) []string {
 	return normalizePose(rows)
 }
 
+// Hands stay connected to the torso. Tools move within the body's outline;
+// there are no floating water marks, sparkles or detached brushes.
+func heldCarePose(rows []string, model petModel, kind string, frame int) []string {
+	row := model.waistRow
+	if (kind == "wash" || kind == "brush") && frame%4 >= 2 {
+		row = min(row+1, len(rows)-2)
+	}
+	line := []rune(rows[row])
+	left := len(line) - len([]rune(strings.TrimLeft(rows[row], " ")))
+	right := len([]rune(strings.TrimRight(rows[row], " "))) - 1
+	if right-left < 9 {
+		return rows
+	}
+	tool := "(==)"
+	if frame%2 == 1 {
+		tool = "(~~)"
+	}
+	switch kind {
+	case "brush":
+		tool = "[|||]"
+		if frame%2 == 1 {
+			tool = "[///]"
+		}
+	case "diaper":
+		if frame < 5 {
+			tool = "[###]"
+		} else if frame < 10 {
+			tool = "[===]"
+		} else {
+			tool = "[ v ]"
+		}
+	case "food":
+		if frame%2 == 0 {
+			tool = "( o )"
+		} else {
+			tool = "(   )"
+		}
+	}
+	// Reach left/right in four poses while both forelimbs remain attached.
+	shift := []int{-2, 0, 2, 0}[frame%4]
+	center := (left+right)/2 + shift
+	start := max(left+2, min(right-len(tool)-1, center-len(tool)/2))
+	for col := left + 1; col < right; col++ {
+		line[col] = ' '
+	}
+	line[left], line[right] = '(', ')'
+	line[left+1], line[right-1] = '\\', '/'
+	for col := left + 2; col < start; col++ {
+		line[col] = '_'
+	}
+	for i, c := range tool {
+		line[start+i] = c
+	}
+	for col := start + len(tool); col < right-1; col++ {
+		line[col] = '_'
+	}
+	rows[row] = string(line)
+	return rows
+}
+
 func stageLabel(t Tamagotchi) string {
 	return fmt.Sprintf("%s (%d/10)", t.Stage, growthIndex(t.Stage)+1)
 }
@@ -298,10 +349,22 @@ func eggPose(t Tamagotchi, kind string, frame int) []string {
 		`    \    .  .      /`,
 		`     '------------'`,
 	}
-	if (kind == "wash" || kind == "brush" || kind == "diaper") && frame%2 == 1 {
-		for i := range rows {
-			rows[i] = " " + rows[i]
+	if kind == "wash" || kind == "brush" || kind == "diaper" {
+		tool := "[==]"
+		if kind == "brush" {
+			tool = "[|||]"
 		}
+		if kind == "diaper" {
+			if frame < 5 {
+				tool = "[###]"
+			} else if frame < 10 {
+				tool = "[===]"
+			} else {
+				tool = "[ v ]"
+			}
+		}
+		pad := 3 + []int{0, 2, 4, 2}[frame%4]
+		rows[7] = `   \` + strings.Repeat(" ", pad) + tool + strings.Repeat(" ", 16-pad-len(tool)) + `/`
 	}
 	if kind == "refuse" && frame%2 == 1 {
 		for i := 0; i <= 6; i++ {

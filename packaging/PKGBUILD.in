@@ -1,0 +1,14 @@
+pkgname=ttymagotchi
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc='Animated virtual pets and interactive minigames in your terminal'
+arch=('x86_64')
+url='https://github.com/rene-timmermans/ttymagotchi'
+license=('MIT')
+options=('!strip' '!debug')
+source=("ttymagotchi-${pkgver}-linux-amd64.tar.gz")
+sha256sums=('@BINARY_SHA256@')
+package() {
+  cd "$srcdir/ttymagotchi-${pkgver}"
+  sh packaging/stage.sh "$pkgdir"
+}

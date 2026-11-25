@@ -58,7 +58,7 @@ func LoadConfig() (*Config, error) {
 		return nil, err
 	}
 
-	appConfigDir := filepath.Join(configDir, "termagotchi")
+	appConfigDir := filepath.Join(configDir, "ttymagotchi")
 	if err := os.MkdirAll(appConfigDir, 0755); err != nil {
 		return nil, err
 	}
@@ -90,8 +90,13 @@ func LoadConfig() (*Config, error) {
 		},
 	}
 
-	if _, err := os.Stat(configPath); err == nil {
-		data, err := os.ReadFile(configPath)
+	// Import the old save only when no ttymagotchi save exists. Never modify it.
+	loadPath := configPath
+	if _, err := os.Stat(loadPath); os.IsNotExist(err) {
+		loadPath = filepath.Join(configDir, "termagotchi", "config.yml")
+	}
+	if _, err := os.Stat(loadPath); err == nil {
+		data, err := os.ReadFile(loadPath)
 		if err != nil {
 			return nil, err
 		}
@@ -117,6 +122,8 @@ func LoadConfig() (*Config, error) {
 		cfg.Tamagotchi.IsAlive = false
 	}
 
+	cfg.App.SaveDirectory = appConfigDir
+
 	// Update current login time
 	cfg.App.CurrentLogin = time.Now()
 
@@ -129,8 +136,12 @@ func SaveConfig(cfg *Config) error {
 		return err
 	}
 
-	appConfigDir := filepath.Join(configDir, "termagotchi")
+	appConfigDir := filepath.Join(configDir, "ttymagotchi")
 	configPath := filepath.Join(appConfigDir, "config.yml")
+	if err := os.MkdirAll(appConfigDir, 0755); err != nil {
+		return err
+	}
+	cfg.App.SaveDirectory = appConfigDir
 
 	data, err := yaml.Marshal(cfg)
 	if err != nil {

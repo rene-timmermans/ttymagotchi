@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ezeoleaf/termagotchi/internal/config"
+	"github.com/rene-timmermans/ttymagotchi/internal/config"
 )
 
 func fixedDiaperSchedule(p *Tamagotchi) {

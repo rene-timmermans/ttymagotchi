@@ -67,7 +67,7 @@ func getList() *tview.List {
 	list.SetSelectedTextColor(tcell.ColorBlack)
 	list.SetSelectedBackgroundColor(tcell.ColorYellow)
 	list.SetBorder(true)
-	list.SetTitle("Termagotchi")
+	list.SetTitle("ttymagotchi")
 	return list
 }
 

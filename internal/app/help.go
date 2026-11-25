@@ -29,7 +29,7 @@ func (a *App) helpPage() (title string, content tview.Primitive) {
 }
 
 var helpText = []string{
-	"=== TERMAGOTCHI HELP ===",
+	"=== TTYMAGOTCHI HELP ===",
 	"CARE & HEALTH",
 	"Hunger: 0 = Full, 100 = Starving",
 	"Happiness: 0 = Very Sad, 100 = Very Happy",
