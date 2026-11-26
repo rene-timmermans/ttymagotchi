@@ -1,12 +1,13 @@
 {
-  "renderer_source_sha256": "d9778a2b35b729bc34a28e8044bd8607f3805fef8beefdb481d7f7a5f093fc7c",
-  "cards": 1852,
-  "frames_covered": 4550,
+  "renderer_source_sha256": "5dabd0062a659300e30ceaf957efd021d2e725bf782085cbba123c602a3965bb",
+  "cards": 2872,
+  "frames_covered": 9950,
   "sections": {
     "Growth": 50,
+    "Compact": 50,
     "Expressions": 350,
-    "Idle": 150,
-    "Care": 910,
+    "Idle": 1400,
+    "Care": 630,
     "Food": 350,
     "Legacy": 20,
     "Games": 18,
@@ -15,45 +16,78 @@
   "artifacts": [
     {
       "file": "all-art.png",
-      "width": 12000,
-      "height": 20012,
-      "bytes": 1393475
+      "width": 18000,
+      "height": 27516,
+      "bytes": 2608846
     },
     {
       "file": "cat.png",
-      "width": 3600,
-      "height": 13012,
-      "bytes": 346996
+      "width": 6000,
+      "height": 22422,
+      "bytes": 760934
     },
     {
       "file": "dog.png",
-      "width": 3600,
-      "height": 13012,
-      "bytes": 350257
+      "width": 6000,
+      "height": 21916,
+      "bytes": 749204
     },
     {
       "file": "rabbit.png",
-      "width": 3600,
-      "height": 13012,
-      "bytes": 359545
+      "width": 6000,
+      "height": 20398,
+      "bytes": 745486
     },
     {
       "file": "guinea_pig.png",
-      "width": 3600,
-      "height": 13012,
-      "bytes": 345289
+      "width": 6000,
+      "height": 23434,
+      "bytes": 773567
     },
     {
       "file": "penguin.png",
-      "width": 3600,
-      "height": 13245,
-      "bytes": 366023
+      "width": 6000,
+      "height": 24446,
+      "bytes": 878297
     },
     {
       "file": "overview.png",
+      "width": 4800,
+      "height": 5512,
+      "bytes": 220762
+    },
+    {
+      "file": "adult-portraits.png",
+      "width": 3200,
+      "height": 882,
+      "bytes": 31317
+    },
+    {
+      "file": "compact-portraits.png",
       "width": 2400,
-      "height": 4164,
-      "bytes": 133804
+      "height": 556,
+      "bytes": 17204
+    },
+    {
+      "file": "character-review.png",
+      "width": 4800,
+      "height": 4140,
+      "bytes": 119445
+    },
+    {
+      "file": "growth-review.png",
+      "width": 6200,
+      "height": 3800,
+      "bytes": 179797
+    },
+    {
+      "file": "behaviours.gif",
+      "width": 2812,
+      "height": 2788,
+      "frames": 15,
+      "frame_samples": 24,
+      "duration_ms": 9600,
+      "bytes": 1911462
     }
   ]
 }

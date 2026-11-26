@@ -77,247 +77,197 @@ func speciesLabel(t Tamagotchi) string {
 }
 
 type petModel struct {
-	lines                                 []string
-	faceRow, mouthRow, mouthCol, waistRow int
+	lines                                                                []string
+	faceRow, mouthRow, mouthCol, waistRow, careCol, eyeCol, secondEyeCol int
 }
 
-// Templates use anatomical anchors so paws and held care tools follow the pet.
-// Each species has nine progressively larger forms after the shared mystery egg.
 func animalModel(t Tamagotchi) petModel {
-	level := max(1, growthIndex(t.Stage))
-	width := 22 + level
-	patterns := []string{".", "..", ":.", ":.:", ". : .", ": . :", ". : : .", ": . . :", ". : . : ."}
-	coat := patterns[level-1]
-	span := strings.Repeat(" ", 3+level/3)
-	rows := []string{}
-	faceRow, mouthRow, waistRow := 0, 0, 0
-	add := func(s string) {
-		visible := strings.NewReplacer("{e}", "o", "{m}", "w", "{b}", "^").Replace(s)
-		pad := max(0, (width-uniseg.StringWidth(visible))/2)
-		rows = append(rows, strings.Repeat(" ", pad)+s)
+	rows := frameTemplate(portraitFor(t), petArtSize(t))
+	model := petModel{lines: rows}
+	for row, line := range rows {
+		if strings.Contains(line, "{e}") {
+			model.faceRow = row
+			model.eyeCol = strings.Index(line, "{e}")
+			model.secondEyeCol = strings.Index(strings.Replace(line, "{e}", "o", 1), "{e}")
+		}
+		if col := strings.Index(line, "{m}"); col >= 0 {
+			model.mouthRow = row
+			model.mouthCol = col
+		}
+		if col := strings.Index(line, "{c}"); col >= 0 {
+			model.waistRow = row
+			model.careCol = col
+		}
 	}
-	switch t.Species {
-	case "cat":
-		add(`/\` + strings.Repeat(" ", 7+level/2) + `/\`)
-		add(`/  \` + strings.Repeat("_", 3+level/2) + `/  \`)
-		add(`/` + strings.Repeat(" ", 13+level/2) + `\`)
-		faceRow = len(rows)
-		add(`|  {e}` + span + `{e}  |`)
-		mouthRow = len(rows)
-		add(`==\` + span + `{m}` + span + `/==`)
-		add(`\` + strings.Repeat("_", 9+level/2) + `/`)
-		add(`/|` + span + coat + span + `|\`)
-		waistRow = len(rows)
-		add(`( |` + span + coat + span + `| )`)
-		for i := 0; i < level/4; i++ {
-			add(`| |` + strings.Repeat(" ", 11+level/2) + `| |`)
-		}
-		add(`\_|` + strings.Repeat("_", 11+level/2) + `|_/~~)`)
-		add(`(____)` + span + `(____)`)
-	case "dog":
-		add(`__` + strings.Repeat("_", 9+level/2) + `__`)
-		add(`/  \` + strings.Repeat("_", 5+level/2) + `/  \`)
-		add(`/    |` + strings.Repeat(" ", 7+level/2) + `|    \`)
-		faceRow = len(rows)
-		add(`U  / {e}` + span + `{e} \  U`)
-		add(`|  |` + span + `Y` + span + `|  |`)
-		mouthRow = len(rows)
-		add(`\__/` + span + `{m}` + span + `\__/`)
-		add(`/|` + span + coat + span + `|\`)
-		waistRow = len(rows)
-		add(`( |` + span + coat + span + `| )`)
-		for i := 0; i < level/4; i++ {
-			add(`| |` + strings.Repeat(" ", 11+level/2) + `| |`)
-		}
-		add(`\_|` + strings.Repeat("_", 11+level/2) + `|_/ /)`)
-		add(`(____)` + span + `(____)`)
-	case "rabbit":
-		add(`(\  /)` + strings.Repeat(" ", 3+level/3) + `(\  /)`)
-		add(`| || |` + strings.Repeat(" ", 3+level/3) + `| || |`)
-		if level >= 5 {
-			add(`| || |` + strings.Repeat(" ", 3+level/3) + `| || |`)
-		}
-		add(`\_||_/` + strings.Repeat("_", 3+level/3) + `\_||_/`)
-		faceRow = len(rows)
-		add(`/  {e}` + span + `{e}  \`)
-		mouthRow = len(rows)
-		add(`==(` + span + `{m}` + span + `)==`)
-		add(`\` + span + `""` + span + `/`)
-		add(`/|` + span + coat + span + `|\`)
-		waistRow = len(rows)
-		add(`( |` + span + coat + span + `| )o`)
-		for i := 0; i < level/5; i++ {
-			add(`| |` + strings.Repeat(" ", 11+level/2) + `| |`)
-		}
-		add(`\_|` + strings.Repeat("_", 11+level/2) + `|_/`)
-		add(`(______)` + span + `(______)`)
-	case "guinea_pig":
-		add(`__` + strings.Repeat(" ", 11+level/2) + `__`)
-		add(`(  )` + strings.Repeat("_", 7+level/2) + `(  )`)
-		add(`/` + strings.Repeat(" ", 15+level/2) + `\`)
-		faceRow = len(rows)
-		add(`|   {e}` + span + `{e}   |`)
-		mouthRow = len(rows)
-		add(`==(` + span + `>{m}<` + span + `)==`)
-		add(`\` + strings.Repeat(" ", 15+level/2) + `/`)
-		add(`/` + span + coat + span + `\`)
-		waistRow = len(rows)
-		add(`( ` + span + coat + span + ` )`)
-		for i := 0; i < level/4; i++ {
-			add(`( ` + span + coat + span + ` )`)
-		}
-		add(`\` + strings.Repeat("_", 17+level/2) + `/`)
-		add(`(_)(_)` + span + `(_)(_)`)
-	case "penguin":
-		add(`.` + strings.Repeat("-", 9+level/2) + `.`)
-		add(`/` + strings.Repeat(" ", 11+level/2) + `\`)
-		faceRow = len(rows)
-		add(`/  ({e})` + span + `({e})  \`)
-		mouthRow = len(rows)
-		add(`|` + span + `<{m}>` + span + `|`)
-		add(`|` + span + `___` + span + `|`)
-		add(`/|` + span + `/   \` + span + `|\`)
-		waistRow = len(rows)
-		add(`/ |` + span + `| ` + coat + ` |` + span + `| \`)
-		for i := 0; i < level/4; i++ {
-			add(`| |` + span + `|     |` + span + `| |`)
-		}
-		add(`\ |` + span + `\___/` + span + `| /`)
-		add(`\_|` + strings.Repeat("_", 13+level/2) + `|_/`)
-		add(`/____\` + span + `/____\`)
-	}
-	// Eyebrows get their own row so emotion remains readable with closed eyes.
-	face := rows[faceRow]
-	left := strings.Index(face, "{e}")
-	right := strings.Index(strings.Replace(face, "{e}", "o", 1), "{e}")
-	brows := strings.Repeat(" ", left) + "{b}" + strings.Repeat(" ", right-left-1) + "{b}"
-	rows = append(rows, "")
-	copy(rows[faceRow+1:], rows[faceRow:])
-	rows[faceRow] = brows
-	faceRow++
-	mouthRow++
-	waistRow++
-
-	// Anchor columns are measured with the same one-cell eye/mouth placeholders.
-	mouthLine := strings.ReplaceAll(rows[mouthRow], "{e}", "o")
-	mouthCol := strings.Index(mouthLine, "{m}")
-	return petModel{rows, faceRow, mouthRow, mouthCol, waistRow}
+	return model
 }
 
 func animalPose(t Tamagotchi, kind string, frame int) []string {
 	model := animalModel(t)
-	emotion := expressionFor(t.Happiness, t.IsAlive && t.Health > 0)
+	alive := t.IsAlive && t.Health > 0
+	emotion := expressionFor(t.Happiness, alive)
 	eyes, mouth := emotion.eyes, emotion.mouth
-	if t.IsAlive && (kind == "sleep" || kind == "wash" || (kind == "idle" && frame%12 == 11)) {
-		eyes = "-"
-	}
-	if t.IsAlive && kind == "food" {
-		mouth = "o"
-		if frame%2 == 1 {
-			mouth = "-"
+	phase := frame % 24
+	if alive && kind == "idle" {
+		if phase == 11 || phase == 12 {
+			eyes = "-"
+		}
+		if t.Energy < 20 && phase >= 16 && phase <= 18 {
+			eyes = "-"
+			mouth = "o"
+		}
+		if t.Species == "guinea_pig" && phase >= 3 && phase <= 5 {
+			mouth = "o"
 		}
 	}
-	if t.IsAlive && kind == "sleep" && frame%2 == 0 {
-		mouth = "o"
+	if alive && (kind == "sleep" || kind == "wash" || (kind == "idle" && frame%12 == 11)) {
+		eyes = "-"
+	}
+	if alive && (kind == "food" || kind == "sleep") {
+		if frame%2 == 0 {
+			mouth = "o"
+		} else {
+			mouth = emotion.mouth
+		}
+	}
+	paw, tail, ear := "_", ")", ")"
+	if t.Species == "dog" {
+		tail = "/"
+	}
+	if t.Species == "rabbit" {
+		tail = "o"
+	}
+	if alive && kind == "idle" {
+		switch t.Species {
+		case "cat":
+			if phase >= 3 && phase <= 6 && phase%2 == 1 {
+				tail = "/"
+			}
+		case "dog":
+			if t.Happiness >= 40 && phase >= 2 && phase <= 8 && phase%2 == 1 {
+				tail = "\\"
+			}
+		case "rabbit":
+			if phase >= 4 && phase <= 6 {
+				ear = "|"
+			}
+		case "guinea_pig":
+			if phase == 4 {
+				paw = "/"
+			}
+		case "penguin":
+			if phase >= 4 && phase <= 7 {
+				if phase%2 == 0 {
+					paw = "/"
+				} else {
+					paw = "\\"
+				}
+			}
+		}
 	}
 
+	if alive && (kind == "wash" || kind == "brush" || kind == "diaper" || kind == "food") {
+		if frame%2 == 0 {
+			paw = "/"
+		} else {
+			paw = "\\"
+		}
+	}
 	rows := make([]string, len(model.lines))
 	for i, line := range model.lines {
 		line = strings.Replace(line, "{b}", emotion.brow, 1)
-		rows[i] = strings.NewReplacer("{e}", eyes, "{m}", mouth, "{b}", emotion.rightBrow()).Replace(line)
+		rows[i] = strings.NewReplacer("{b}", emotion.rightBrow(), "{e}", eyes, "{m}", mouth, "{c}", " ", "{p}", paw, "{t}", tail, "{a}", ear).Replace(line)
 	}
-	if t.IsAlive && (kind == "wash" || kind == "brush" || kind == "diaper" || kind == "food") {
-		rows = heldCarePose(rows, model, kind, frame)
+	if alive && kind == "sleep" {
+		// The paws settle on the ground; mouth and chest move with each breath.
+		if frame%2 == 1 {
+			rows[model.waistRow] = replacePetCells(rows[model.waistRow], model.careCol, "(")
+		}
 	}
-	if t.IsAlive && kind == "idle" {
-		if t.Species == "rabbit" && frame%2 == 1 {
-			rows[0] = " " + rows[0]
-		}
-		if t.Species == "guinea_pig" && frame%2 == 1 {
-			rows[len(rows)-1] = strings.ReplaceAll(rows[len(rows)-1], "(_)(_)", "(__)()")
-		}
-		if t.Species == "cat" && frame%2 == 1 {
-			for i := range rows {
-				rows[i] = strings.ReplaceAll(rows[i], "~~)", "~(~")
+	if alive && (kind == "wash" || kind == "brush" || kind == "diaper") {
+		tool := "(=)"
+		switch kind {
+		case "wash":
+			if frame%2 == 1 {
+				tool = "(~)"
+			}
+		case "brush":
+			tool = "[|]"
+			if frame%2 == 1 {
+				tool = "[/]"
+			}
+		case "diaper":
+			if frame < 5 {
+				tool = "[#]"
+			} else if frame < 10 {
+				tool = "[=]"
+			} else {
+				tool = "[ ]"
 			}
 		}
-		if t.Species == "dog" && frame%2 == 1 {
+		// Contact points are authored with each drawing, so tools touch the animal.
+		rows[model.waistRow] = replacePetCells(rows[model.waistRow], model.careCol, tool)
+	}
+	if alive && kind == "idle" {
+		rows = addPetTear(rows, model, t, phase)
+		// Young animals briefly wobble on short legs; adults stay grounded.
+		if growthIndex(t.Stage) <= 2 && phase >= 5 && phase <= 7 {
 			for i := range rows {
-				rows[i] = strings.ReplaceAll(rows[i], "/)", "\\)")
+				rows[i] = " " + rows[i]
 			}
 		}
-		if t.Species == "penguin" && frame%2 == 1 {
+		// A waddle moves the complete penguin, keeping its outline connected.
+		if t.Species == "penguin" && phase >= 5 && phase <= 7 {
 			for i := range rows {
 				rows[i] = " " + rows[i]
 			}
 		}
 	}
-	if kind == "refuse" && frame%2 == 1 {
+	if alive && kind == "refuse" && frame%2 == 1 {
 		for i := 0; i <= model.mouthRow; i++ {
 			rows[i] = "  " + rows[i]
 		}
 	}
-	return normalizePose(rows)
+	return padPoseInFrame(rows, petArtSize(t))
 }
 
-// Hands stay connected to the torso. Tools move within the body's outline;
-// there are no floating water marks, sparkles or detached brushes.
-func heldCarePose(rows []string, model petModel, kind string, frame int) []string {
-	row := model.waistRow
-	if (kind == "wash" || kind == "brush") && frame%4 >= 2 {
-		row = min(row+1, len(rows)-2)
-	}
-	line := []rune(rows[row])
-	left := len(line) - len([]rune(strings.TrimLeft(rows[row], " ")))
-	right := len([]rune(strings.TrimRight(rows[row], " "))) - 1
-	if right-left < 9 {
+// A tear starts at an eye and follows a short path down the cheek. Each cycle
+// has a pause; very unhappy pets shed a second tear from the other eye.
+func addPetTear(rows []string, model petModel, pet Tamagotchi, phase int) []string {
+	if pet.Happiness >= 20 {
 		return rows
 	}
-	tool := "(==)"
-	if frame%2 == 1 {
-		tool = "(~~)"
+	first := 7
+	if pet.Happiness <= 0 {
+		first = 3
 	}
-	switch kind {
-	case "brush":
-		tool = "[|||]"
-		if frame%2 == 1 {
-			tool = "[///]"
-		}
-	case "diaper":
-		if frame < 5 {
-			tool = "[###]"
-		} else if frame < 10 {
-			tool = "[===]"
-		} else {
-			tool = "[ v ]"
-		}
-	case "food":
-		if frame%2 == 0 {
-			tool = "( o )"
-		} else {
-			tool = "(   )"
-		}
+	step := phase - first
+	column := model.eyeCol
+	if pet.Happiness <= 0 && phase >= 15 {
+		step = phase - 15
+		column = model.secondEyeCol
 	}
-	// Reach left/right in four poses while both forelimbs remain attached.
-	shift := []int{-2, 0, 2, 0}[frame%4]
-	center := (left+right)/2 + shift
-	start := max(left+2, min(right-len(tool)-1, center-len(tool)/2))
-	for col := left + 1; col < right; col++ {
-		line[col] = ' '
+	if step < 0 || step >= 4 {
+		return rows
 	}
-	line[left], line[right] = '(', ')'
-	line[left+1], line[right-1] = '\\', '/'
-	for col := left + 2; col < start; col++ {
-		line[col] = '_'
+	row := model.faceRow + 1 + step
+	if row >= len(rows) {
+		return rows
 	}
-	for i, c := range tool {
-		line[start+i] = c
+	if step > 1 {
+		column = max(0, column-step+1)
 	}
-	for col := start + len(tool); col < right-1; col++ {
-		line[col] = '_'
-	}
-	rows[row] = string(line)
+	rows[row] = replacePetCells(rows[row], column, "💧")
 	return rows
+}
+
+// Use the scene's grapheme-aware cell overlay for both ASCII and wide emoji.
+func replacePetCells(line string, column int, mark string) string {
+	scene := newSpriteScene()
+	scene.put(0, 0, line)
+	scene.put(column, 0, mark)
+	width := min(sceneWidth, max(uniseg.StringWidth(line), column+uniseg.StringWidth(mark)))
+	return strings.Join(scene[0][:width], "")
 }
 
 func stageLabel(t Tamagotchi) string {
@@ -371,7 +321,11 @@ func eggPose(t Tamagotchi, kind string, frame int) []string {
 			rows[i] = "  " + rows[i]
 		}
 	}
-	return normalizePose(rows)
+	if t.IsAlive && t.Health > 0 && kind == "idle" {
+		rows = addPetTear(rows, petModel{faceRow: 5, eyeCol: 8, secondEyeCol: 13}, t, frame%24)
+	}
+
+	return poseFrame(rows, petArtSize(t))
 }
 
 // Keep all rows equally wide so tview centers the whole animal as one figure.

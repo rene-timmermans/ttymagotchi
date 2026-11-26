@@ -64,7 +64,8 @@ func (a *App) generateOptionsList(list *tview.List) {
 	speed := a.Config.App.SpeedPercent
 	list.AddItem(fmt.Sprintf(a.tr("Speed: %d%%   ← slower / faster →   (+ / -)"), speed), "", 0, nil)
 	list.AddItem(fmt.Sprintf(a.tr("Hunger 0 → 100: %s"), a.duration(hungerDuration(speed))), "", 0, nil)
-	list.AddItem(a.tr("Changes also affect energy, hygiene and neglect damage."), "", 0, nil)
+	list.AddItem(fmt.Sprintf(a.tr("One game day: %s"), a.duration(gameDayDuration(speed))), "", 0, nil)
+	list.AddItem(a.tr("Changes also affect age, energy, hygiene and neglect damage."), "", 0, nil)
 	list.AddItem(a.tr("Offline time counts. Animations keep their normal speed."), "", 0, nil)
 	list.AddItem("", "", 0, nil)
 	for _, value := range []int{0, 25, 50, 75, 100} {

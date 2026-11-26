@@ -32,6 +32,13 @@ func gameKind(index int) string {
 
 func (a *App) openActivity(kind string, index int) {
 	v := tview.NewTextView().SetDynamicColors(true).SetTextAlign(tview.AlignCenter)
+	v.SetRect(0, 0, 80, 24)
+	if a.TLayout != nil {
+		_, _, w, h := a.TLayout.GetRect()
+		if w > 0 && h > 0 {
+			v.SetRect(0, 0, w, h)
+		}
+	}
 	v.SetBorder(true).SetTitle(a.tr(" ttymagotchi • Activity ")).SetBorderColor(tcell.ColorLightCyan)
 	a.uiMu.Lock()
 	a.activityActive = true
@@ -263,6 +270,15 @@ func (a *App) tickActivity(now time.Time) {
 func (a *App) renderActivity(now time.Time) {
 	g := a.activity
 	t, _ := a.tamagotchiSnapshot()
+	_, _, width, height := g.view.GetInnerRect()
+	reserved := 9
+	if g.kind == "food" || isCare(g.kind) || g.kind == "refuse" {
+		reserved = 6
+	}
+	t = petForViewport(t, width-6, height, reserved)
+	if t.compactArt && (g.phase == "result" || g.kind == "refuse_food" || (!isCare(g.kind) && g.kind != "food" && g.kind != "refuse")) {
+		t.artHeightLimit = 13
+	}
 	title, body, hint := "", "", a.tr("Esc: Status (cancel game) • Ctrl+C: quit")
 	sprite := renderTamagotchiSprite(t)
 	if g.kind == "refuse_food" {

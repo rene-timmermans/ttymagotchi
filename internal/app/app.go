@@ -111,6 +111,7 @@ func (a *App) initializeStateFromConfig() {
 			Cleanliness:  cfg.Cleanliness, Grooming: cfg.Grooming, GroomTicks: cfg.GroomTicks, CareTicks: cfg.CareTicks, LastWash: cfg.LastWash, LastBrush: cfg.LastBrush,
 			Name:      cfg.Name,
 			Age:       cfg.Age,
+			AgeTicks:  initialAgeTicks(cfg, a.Config.App.LastLogin),
 			Hunger:    cfg.Hunger,
 			Happiness: cfg.Happiness,
 			Health:    cfg.Health,
@@ -128,6 +129,8 @@ func (a *App) initializeStateFromConfig() {
 	if !knownSpecies(a.currentTamagotchi.Species) {
 		a.currentTamagotchi.Species = randomSpecies()
 	}
+	a.currentTamagotchi.Age = int(a.currentTamagotchi.AgeTicks / ageTicksPerDay)
+	a.updateStageLocked(a.currentTamagotchi.Stage)
 	ensureDiaperSchedule(a.currentTamagotchi)
 	a.timeAccumulator = maxDuration(0, minDuration(a.updateInterval-1, a.Config.App.TickRemainder))
 	a.checkDeathLocked()
@@ -265,7 +268,10 @@ func (a *App) applyTickLocked() {
 
 	t := a.currentTamagotchi
 
-	t.Age = max(0, int(time.Since(t.Created).Hours())/24)
+	if t.AgeTicks < maxAgeTicks {
+		t.AgeTicks++
+	}
+	t.Age = int(t.AgeTicks / ageTicksPerDay)
 	a.updateStageLocked(t.Stage)
 	t.Hunger = min(100, t.Hunger+1)
 	t.Energy = max(0, t.Energy-1)
@@ -334,9 +340,11 @@ func (a *App) applyOfflineProgress() {
 		return
 	}
 
-	if a.advanceTime(elapsed) {
+	changed := a.advanceTime(elapsed)
+	a.Config.App.LastLogin = a.Config.App.CurrentLogin
+	a.updateConfigFromState()
+	if changed {
 		a.addLocalizedEvent("PROGRESS", "Time passed while you were away: %s.", durationArgument(elapsed))
-		a.updateConfigFromState()
 	}
 }
 
@@ -427,6 +435,8 @@ func (a *App) updateConfigFromState() {
 	a.Config.Tamagotchi.LastBrush = t.LastBrush
 	a.Config.Tamagotchi.Name = t.Name
 	a.Config.Tamagotchi.Age = t.Age
+	ageTicks := t.AgeTicks
+	a.Config.Tamagotchi.AgeTicks = &ageTicks
 	a.Config.Tamagotchi.Hunger = t.Hunger
 	a.Config.Tamagotchi.Happiness = t.Happiness
 	a.Config.Tamagotchi.Health = t.Health

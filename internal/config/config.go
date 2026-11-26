@@ -23,6 +23,7 @@ type AppConfig struct {
 }
 
 type TamagotchiConfig struct {
+	AgeTicks         *int64    `yaml:"age_ticks,omitempty"`
 	Species          string    `yaml:"species"`
 	HealthyTicks     int       `yaml:"healthy_ticks"`
 	Cleanliness      int       `yaml:"cleanliness"`

@@ -52,6 +52,7 @@ func TestNeglectGraduallyLowersHappiness(t *testing.T) {
 			p.Grooming = 20
 			p.Stage = "adult"
 			p.Created = time.Now().Add(-14 * 24 * time.Hour)
+			p.AgeTicks = 14 * ageTicksPerDay
 		case "energy":
 			p.Energy = 19
 		}
@@ -73,6 +74,8 @@ func TestResultKeepsActualHappinessExpression(t *testing.T) {
 	if p.Happiness != 5 {
 		t.Fatal("wrong food Happiness")
 	}
+	p.compactArt = true
+	p.artHeightLimit = 13
 	expected := renderTamagotchiSprite(p)
 	if !strings.Contains(a.activity.view.GetText(false), expected) {
 		t.Fatal("result replaced real mood with a happy face")
@@ -85,6 +88,7 @@ func TestNeglectedAgeCareHurtsHealthAtEveryAge(t *testing.T) {
 		p := a.currentTamagotchi
 		p.Stage = stage
 		p.Created = time.Now().Add(-time.Duration(growthDays[i]) * 24 * time.Hour)
+		p.AgeTicks = int64(growthDays[i]) * ageTicksPerDay
 		p.Grooming = 0
 		p.Diaper = 0
 		p.Hunger = 0

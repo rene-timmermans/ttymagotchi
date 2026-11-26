@@ -3,6 +3,9 @@ package app
 import "time"
 
 type Tamagotchi struct {
+	AgeTicks         int64
+	artHeightLimit   int  // temporary drawing budget, never saved
+	compactArt       bool // transient viewport choice; never part of a save
 	Species          string
 	HealthyTicks     int
 	Cleanliness      int

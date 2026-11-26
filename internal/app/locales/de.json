@@ -252,5 +252,7 @@
   "Stop feeding": "Nicht weiterfüttern",
   "Feed anyway": "Trotzdem füttern",
   "←/→: choose • Enter: confirm • Esc: stop": "←/→: wählen • Enter: bestätigen • Esc: abbrechen",
-  "At hunger 0, No! appears; choose Stop feeding or Feed anyway.": "Bei Hunger 0 erscheint Nein!: aufhören oder trotzdem füttern."
+  "At hunger 0, No! appears; choose Stop feeding or Feed anyway.": "Bei Hunger 0 erscheint Nein!: aufhören oder trotzdem füttern.",
+  "One game day: %s": "Ein Spieltag: %s",
+  "Changes also affect age, energy, hygiene and neglect damage.": "Änderungen wirken auch auf Alter, Energie, Hygiene und Vernachlässigungsschäden."
 }

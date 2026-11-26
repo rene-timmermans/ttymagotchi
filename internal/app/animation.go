@@ -7,7 +7,7 @@ import (
 	"github.com/rivo/uniseg"
 )
 
-const sceneWidth, sceneHeight = 68, 18
+const sceneWidth, sceneHeight = 68, 40
 
 // A fixed-size scene preserves the pet's position while its body animates.
 // Grapheme widths keep emoji food and the egg aligned with terminal cells.
@@ -158,8 +158,9 @@ func renderActionSprite(t Tamagotchi, kind string, index int, elapsed time.Durat
 	for _, line := range pose {
 		width = max(width, uniseg.StringWidth(line))
 	}
-	x, y := (sceneWidth-width)/2, 1
-	mouthRow, mouthCol := 6, 11
+	canvas := actionSceneSize(t)
+	x, y := (canvas.width-width)/2, 1
+	mouthRow, mouthCol := 6, 12
 	if growthIndex(t.Stage) > 0 && knownSpecies(t.Species) {
 		model := animalModel(t)
 		mouthRow, mouthCol = model.mouthRow, model.mouthCol
@@ -170,7 +171,7 @@ func renderActionSprite(t Tamagotchi, kind string, index int, elapsed time.Durat
 	switch kind {
 	case "food":
 		// Hold the selected food at the mouth instead of flying it across the scene.
-		if elapsed < 1500*time.Millisecond && frame%3 != 2 {
+		if elapsed < 1500*time.Millisecond && frame%2 == 0 {
 			icon := strings.Fields(availableFoods[index].Name)[0]
 			s.put(x+mouthCol, y+mouthRow, icon)
 		}
@@ -180,5 +181,9 @@ func renderActionSprite(t Tamagotchi, kind string, index int, elapsed time.Durat
 			s.put(x+width-5, y, "Zzz")
 		}
 	}
-	return s.String()
+	rows := make([]string, canvas.height)
+	for row := range rows {
+		rows[row] = strings.Join(s[row][:canvas.width], "")
+	}
+	return strings.Join(rows, "\n")
 }

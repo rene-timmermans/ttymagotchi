@@ -252,5 +252,7 @@
   "Stop feeding": "Arrêter de nourrir",
   "Feed anyway": "Nourrir quand même",
   "←/→: choose • Enter: confirm • Esc: stop": "←/→ : choisir • Entrée : confirmer • Échap : arrêter",
-  "At hunger 0, No! appears; choose Stop feeding or Feed anyway.": "À faim 0, Non ! apparaît : arrêtez ou nourrissez quand même."
+  "At hunger 0, No! appears; choose Stop feeding or Feed anyway.": "À faim 0, Non ! apparaît : arrêtez ou nourrissez quand même.",
+  "One game day: %s": "Une journée de jeu : %s",
+  "Changes also affect age, energy, hygiene and neglect damage.": "Les changements affectent aussi l’âge, l’énergie, l’hygiène et les dégâts de négligence."
 }

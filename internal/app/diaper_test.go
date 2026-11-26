@@ -156,6 +156,7 @@ func TestBowelEventsStopWhenDiapersAreOutgrown(t *testing.T) {
 	fixedDiaperSchedule(p)
 	p.Stage = "toddler"
 	p.Created = time.Now().Add(-3 * 24 * time.Hour)
+	p.AgeTicks = 3 * ageTicksPerDay
 	p.DiaperDayTicks = 19
 	p.Diaper = 37
 	a.advanceTime(a.updateInterval)

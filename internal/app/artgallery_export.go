@@ -89,19 +89,23 @@ func ExportArtGallery(path string) error {
 			pet.Age = growthDays[growthIndex(stage)]
 			pet.Happiness = 50
 			add("Growth", species, stage, "Neutral growth form", renderTamagotchiSprite(pet), nil)
+			compact := pet
+			compact.compactArt = true
+			add("Compact", species, stage, "Compact growth form", renderTamagotchiSprite(compact), nil)
 			for _, mood := range []struct {
 				name      string
 				happiness int
 			}{{"Delighted", 100}, {"Content", 70}, {"Neutral", 50}, {"Worried", 30}, {"Sad", 10}, {"Tearful", 0}, {"Dead", 0}} {
 				p := pet
 				p.Happiness = mood.happiness
+
 				if mood.name == "Dead" {
 					p.IsAlive = false
 					p.Health = 0
 				}
 				add("Expressions", species, stage, mood.name, renderTamagotchiSprite(p), nil)
 			}
-			frames("Idle", species, stage, "Idle (400 ms per frame)", 12, func(frame int) string {
+			frames("Idle", species, stage, "Idle (400 ms per frame)", 24, func(frame int) string {
 				if stage != "egg" {
 					return strings.Join(animalPose(pet, "idle", frame), "\n")
 				}
@@ -113,6 +117,19 @@ func ExportArtGallery(path string) error {
 				}
 				return strings.Join(pose, "\n")
 			})
+			for _, mood := range []struct {
+				label     string
+				happiness int
+			}{{"Happy idle", 100}, {"Sad idle", 10}, {"Crying idle", 0}, {"Sleepy idle", 50}} {
+				p := pet
+				p.Happiness = mood.happiness
+				if mood.label == "Sleepy idle" {
+					p.Energy = 10
+				}
+				frames("Idle", species, stage, mood.label+" (400 ms per frame)", 24, func(frame int) string {
+					return strings.Join(actionPose(p, "idle", frame), "\n")
+				})
+			}
 			for _, animation := range []struct {
 				kind, label string
 				count       int
@@ -121,9 +138,9 @@ func ExportArtGallery(path string) error {
 					return renderActionSprite(pet, animation.kind, 0, time.Duration(frame)*250*time.Millisecond)
 				})
 			}
-			// Every selectable food has its own approaching sprite.
+			// Every selectable food has its own held sprite at the mouth.
 			for food := 1; food < len(availableFoods); food++ {
-				add("Food", species, stage, availableFoods[food].Name, renderActionSprite(pet, "food", food, 750*time.Millisecond), []int{3})
+				add("Food", species, stage, availableFoods[food].Name, renderActionSprite(pet, "food", food, 500*time.Millisecond), []int{2})
 			}
 		}
 	}

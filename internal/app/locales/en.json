@@ -252,5 +252,7 @@
   "Stop feeding": "Stop feeding",
   "Feed anyway": "Feed anyway",
   "←/→: choose • Enter: confirm • Esc: stop": "←/→: choose • Enter: confirm • Esc: stop",
-  "At hunger 0, No! appears; choose Stop feeding or Feed anyway.": "At hunger 0, No! appears; choose Stop feeding or Feed anyway."
+  "At hunger 0, No! appears; choose Stop feeding or Feed anyway.": "At hunger 0, No! appears; choose Stop feeding or Feed anyway.",
+  "One game day: %s": "One game day: %s",
+  "Changes also affect age, energy, hygiene and neglect damage.": "Changes also affect age, energy, hygiene and neglect damage."
 }

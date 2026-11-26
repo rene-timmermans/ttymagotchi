@@ -30,7 +30,7 @@ func TestFiveSpeciesTenDistinctFormsAndHiddenEgg(t *testing.T) {
 				}
 			}
 			for _, line := range strings.Split(sprite, "\n") {
-				if uniseg.StringWidth(line) > 36 {
+				if uniseg.StringWidth(line) != petArtSize(p).width {
 					t.Fatalf("%s %s too wide for status panel", species, stage)
 				}
 			}
@@ -43,11 +43,11 @@ func TestFiveSpeciesTenDistinctFormsAndHiddenEgg(t *testing.T) {
 				}
 				for frame := 0; frame < 16; frame++ {
 					scene := renderActionSprite(p, kind, 0, time.Duration(frame)*250*time.Millisecond)
-					if len(strings.Split(scene, "\n")) != sceneHeight {
+					if len(strings.Split(scene, "\n")) != actionSceneSize(p).height {
 						t.Fatal("unstable height")
 					}
 					for _, row := range strings.Split(scene, "\n") {
-						if uniseg.StringWidth(row) != sceneWidth {
+						if uniseg.StringWidth(row) != actionSceneSize(p).width {
 							t.Fatalf("%s %s %s frame %d width", species, stage, kind, frame)
 						}
 					}
@@ -156,6 +156,7 @@ func TestDiaperToBrushingTransition(t *testing.T) {
 	p := a.currentTamagotchi
 	p.Stage = "baby"
 	p.Created = time.Now().Add(-3 * 24 * time.Hour)
+	p.AgeTicks = 3 * ageTicksPerDay
 	p.Diaper = 0
 	p.Grooming = 0
 	p.GroomTicks = 20
@@ -184,6 +185,7 @@ func TestBrushingDecaysSlowlyAndPersists(t *testing.T) {
 	a := testApp(t)
 	a.currentTamagotchi.Stage = "adult"
 	a.currentTamagotchi.Created = time.Now().Add(-14 * 24 * time.Hour)
+	a.currentTamagotchi.AgeTicks = 14 * ageTicksPerDay
 	p := a.currentTamagotchi
 	p.Hunger = 0
 	a.advanceTime(20 * a.updateInterval)
@@ -260,6 +262,7 @@ func TestAgeSpecificCarePersistsWithoutResettingPet(t *testing.T) {
 	p.Name = "Saved name"
 	p.Stage = "baby"
 	p.Created = time.Now().Add(-2 * 24 * time.Hour)
+	p.AgeTicks = 2 * ageTicksPerDay
 	p.Species = "rabbit"
 	p.Diaper = 37
 	p.Grooming = 0
@@ -282,8 +285,106 @@ func TestAgeSpecificCarePersistsWithoutResettingPet(t *testing.T) {
 		t.Fatal("reload changed saved pet or active care")
 	}
 	pet.Created = time.Now().Add(-3 * 24 * time.Hour)
+	pet.AgeTicks = 3 * ageTicksPerDay
 	b.advanceTime(b.updateInterval)
 	if ageCareLabel(*pet) != "Brushing" || pet.Grooming != 100 || pet.Diaper != 37 || pet.Name != "Saved name" || pet.Health != 70 {
 		t.Fatal("growth reset the pet or retained obsolete care")
+	}
+}
+
+// Ignore widths, spacing, coat decoration and facial features: anatomical
+// growth must still change the outline, rather than stretching one template.
+func TestGrowthChangesAnatomyBeyondWidth(t *testing.T) {
+	for _, species := range petSpecies {
+		silhouettes := map[string]bool{}
+		for _, stage := range growthStages[1:] {
+			pet := *newDefaultTamagotchi("Test")
+			pet.Species = species
+			pet.Stage = stage
+			rows := actionPose(pet, "idle", 0)
+			var outline []string
+			for _, row := range rows {
+				shape := strings.Map(func(r rune) rune {
+					if strings.ContainsRune(`/\|()`, r) {
+						return r
+					}
+					return -1
+				}, row)
+				if shape != "" {
+					outline = append(outline, shape)
+				}
+			}
+			silhouettes[strings.Join(outline, "\n")] = true
+		}
+		if len(silhouettes) < 7 {
+			t.Errorf("%s: only %d anatomical growth shapes", species, len(silhouettes))
+		}
+	}
+}
+
+func TestTearsAreIntermittentAndPreserveSceneGeometry(t *testing.T) {
+	for _, species := range petSpecies {
+		for _, stage := range growthStages {
+			for _, happiness := range []int{0, 10, 30, 100} {
+				pet := *newDefaultTamagotchi("Test")
+				pet.Species = species
+				pet.Stage = stage
+				pet.Happiness = happiness
+				wet, dry := 0, 0
+				for frame := 0; frame < 24; frame++ {
+					pose := strings.Join(actionPose(pet, "idle", frame), "\n")
+					if strings.Contains(pose, "💧") {
+						wet++
+					} else {
+						dry++
+					}
+					scene := renderActionSprite(pet, "idle", 0, time.Duration(frame)*250*time.Millisecond)
+					for _, line := range strings.Split(scene, "\n") {
+						if uniseg.StringWidth(line) != actionSceneSize(pet).width {
+							t.Fatal("tear shifted terminal geometry")
+						}
+					}
+				}
+				if happiness < 20 && (wet == 0 || dry == 0) {
+					t.Fatalf("%s %s: no intermittent tears", species, stage)
+				}
+				if happiness >= 20 && wet > 0 {
+					t.Fatalf("%s %s: content pet is crying", species, stage)
+				}
+				pet.IsAlive = false
+				pet.Health = 0
+				if strings.Contains(strings.Join(actionPose(pet, "idle", 5), "\n"), "💧") {
+					t.Fatal("dead pet animated")
+				}
+			}
+		}
+	}
+}
+
+func TestEverySpeciesKeepsItsAgeFrameDuringMotion(t *testing.T) {
+	for _, compact := range []bool{false, true} {
+		for _, stage := range growthStages {
+			for _, species := range petSpecies {
+				pet := *newDefaultTamagotchi("Frame")
+				pet.Stage = stage
+				pet.Species = species
+				pet.compactArt = compact
+				pet.Happiness = 0
+				size := petArtSize(pet)
+				for _, kind := range []string{"idle", "refuse", "food", "wash", "brush", "diaper", "sleep"} {
+					for _, frame := range []int{0, 1, 5, 11, 16} {
+						rows := actionPose(pet, kind, frame)
+						if len(rows) != size.height {
+							t.Fatalf("%s %s %s: height %d, want %d", species, stage, kind, len(rows), size.height)
+						}
+						for _, line := range rows {
+							if uniseg.StringWidth(line) != size.width {
+								t.Fatalf("%s %s %s: width %d, want %d", species, stage, kind, uniseg.StringWidth(line), size.width)
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 }

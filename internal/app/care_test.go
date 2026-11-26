@@ -140,6 +140,7 @@ func TestCareAnimationAndSingleCommit(t *testing.T) {
 			if tc.kind == "brush" {
 				pet.Stage = "adult"
 				pet.Created = time.Now().Add(-14 * 24 * time.Hour)
+				pet.AgeTicks = 14 * ageTicksPerDay
 			}
 			before := *pet
 			a.startCare(tc.kind, tc.index)

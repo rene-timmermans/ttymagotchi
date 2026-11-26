@@ -5,6 +5,7 @@ No player save is opened. Install Pillow only for this optional development tool
 """
 import argparse
 from collections import Counter
+from functools import lru_cache
 import hashlib
 import json
 import math
@@ -25,6 +26,7 @@ FONT_PATHS = ["/usr/share/fonts/TTF/DejaVuSansMono.ttf", "/usr/share/fonts/truet
 EMOJI_PATHS = ["/usr/share/fonts/twemoji/twemoji.ttf", "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf"]
 
 
+@lru_cache(maxsize=16)
 def font(size):
     for path in FONT_PATHS:
         if Path(path).exists():
@@ -80,7 +82,8 @@ def text_lines(card, draw, origin, size):
                 stamp = EMOJI_CACHE[key]
                 draw._image.paste(stamp, (x, y), stamp)
             else:
-                draw.text((x, y), text, font=face, fill=TEXT)
+                if text.rstrip(" "):
+                    draw.text((x, y), text.rstrip(" "), font=face, fill=TEXT)
             column += cells
 
 
@@ -148,13 +151,13 @@ def main():
         subprocess.run(["go", "run", "-tags", "artgallery", "./cmd/artgallery", "-out", str(source)], cwd=ROOT, check=True)
         data = json.loads(source.read_text())
     cards = data["cards"]
-    groups = [(section, [c for c in cards if c["section"] == section]) for section in ["Growth", "Expressions", "Idle", "Care", "Food", "Legacy", "Games", "Dialogs"]]
+    groups = [(section, [c for c in cards if c["section"] == section]) for section in ["Growth", "Compact", "Expressions", "Idle", "Care", "Food", "Legacy", "Games", "Dialogs"]]
     output = args.output.resolve()
     # Indexed PNGs keep the full atlas memory bounded despite its many frames.
-    artifacts = [sheet(output / "all-art.png", "TTYMAGOTCHI — COMPLETE ASCII & ANIMATION ATLAS", "5 pets × 10 growth forms • every expression • every distinct frame • all food icons • minigames • refusals • legacy artwork", groups, 12000, 11)]
+    artifacts = [sheet(output / "all-art.png", "TTYMAGOTCHI — COMPLETE ASCII & ANIMATION ATLAS", "5 pets × 10 growth forms • every expression • every distinct frame • all food icons • minigames • refusals • legacy artwork", groups, 18000, 9)]
     for species in data["species"]:
         subset = [(section, [c for c in selected if c["species"] == species]) for section, selected in groups]
-        artifacts.append(sheet(output / f"{species}.png", f"TTYMAGOTCHI — {SPECIES[species].upper()}", "Complete species sheet • ten growth stages • all distinct frames and expressions", subset, 3600, 11))
+        artifacts.append(sheet(output / f"{species}.png", f"TTYMAGOTCHI — {SPECIES[species].upper()}", "Complete species sheet • ten growth stages • all distinct frames and expressions", subset, 6000, 11))
     samples = []
     for label, stage in [("Eating", "adult"), ("Sleeping", "adult"), ("Washing", "adult"), ("Diaper", "baby"), ("Brushing", "adult"), ("Refusal (sleep / full stomach)", "adult")]:
         selected = [c for c in cards if c["section"] == "Care" and c["species"] == "cat" and c["stage"] == stage and c["label"] == label]
@@ -166,7 +169,43 @@ def main():
         ("Eight different minigames", [c for c in cards if c["section"] == "Games" and c["stage"] == "playing"]),
         ("No! — sleep refusal and stop / feed-anyway decisions", [c for c in cards if c["section"] == "Dialogs"]),
     ]
-    artifacts.append(sheet(output / "overview.png", "TTYMAGOTCHI — ART REVIEW OVERVIEW", "Quick review of all 50 growth forms, six moods + death, care animations, eight games and refusal dialogs", overview, 2400, 12))
+    artifacts.append(sheet(output / "overview.png", "TTYMAGOTCHI — ART REVIEW OVERVIEW", "Quick review of all 50 growth forms, six moods + death, care animations, eight games and refusal dialogs", overview, 4800, 12))
+    adults = [c for c in cards if c["section"] == "Growth" and c["stage"] == "adult"]
+    artifacts.append(sheet(output / "adult-portraits.png", "TTYMAGOTCHI — DETAILED ADULT PORTRAITS", "Five species in the same 58 × 34 terminal-cell frame • shared ground line • full-size terminal artwork", [("Cat, dog, rabbit, guinea pig and penguin", adults)], 3200, 17))
+    compact = [c for c in cards if c["section"] == "Compact" and c["stage"] == "adult"]
+    artifacts.append(sheet(output / "compact-portraits.png", "TTYMAGOTCHI — COMPACT ADULT PORTRAITS", "Small-terminal versions • C toggles compact/detail in the live preview", [("All five compact adult forms", compact)], 2400, 18))
+    review = []
+    for species in data["species"]:
+        expressions = [c for c in cards if c["section"] == "Expressions" and c["species"] == species and c["stage"] == "adult"]
+        review.append((f"{SPECIES[species]} — Happiness 100 / 70 / 50 / 30 / 10 / 0, then death", expressions))
+    artifacts.append(sheet(output / "character-review.png", "TTYMAGOTCHI — FIVE PETS & EVERY EXPRESSION", "Animal portraits with individual anatomy • six Happiness levels and death • expressions also apply during care", review, 4800, 18))
+    growth = [(f"{SPECIES[s]} — ten individually drawn growth forms", [c for c in cards if c["section"] == "Growth" and c["species"] == s]) for s in data["species"]]
+    artifacts.append(sheet(output / "growth-review.png", "TTYMAGOTCHI — GROWTH, POSTURE & ANATOMY", "Lying newborns, short young legs and mature animal silhouettes • the egg stays a mystery", growth, 6200, 16))
+    # A real animation sample, assembled from the same exported game frames.
+    motion_rows = [("Young & happy", "baby", "Happy idle"), ("Adult & happy", "adult", "Happy idle"), ("Crying", "adult", "Crying idle"), ("Tired / yawning", "adult", "Sleepy idle")]
+    idle = [c for c in cards if c["section"] == "Idle"]
+    cw, ch = dimensions(idle, 15, 280)
+    width = 32 + len(data["species"]) * (cw + 8)
+    height = 92 + len(motion_rows) * (ch + 40)
+    movie = []
+    for tick in range(24):
+        canvas = Image.new("P", (width, height), 0)
+        canvas.putpalette(PALETTE.getpalette())
+        draw = ImageDraw.Draw(canvas)
+        draw.text((20, 16), "TTYMAGOTCHI — LIVE ANIMAL BEHAVIOURS", font=font(21), fill=4)
+        draw.text((20, 48), "Actual game frames • calm pauses, blinking, tails, ears, waddles, tears and yawns", font=font(12), fill=3)
+        for row_index, (heading, stage, label) in enumerate(motion_rows):
+            y = 85 + row_index * (ch + 40)
+            draw.text((20, y), heading, font=font(16), fill=4)
+            for col, species in enumerate(data["species"]):
+                source = next(c for c in idle if c["species"] == species and c["stage"] == stage and c["label"].startswith(label) and tick in c.get("frames", []))
+                card = dict(source, frames=[])
+                canvas.paste(draw_card(card, cw, ch, 15), (16 + col * (cw + 8), y + 28))
+        movie.append(canvas)
+    motion_path = output / "behaviours.gif"
+    movie[0].save(motion_path, save_all=True, append_images=movie[1:], duration=400, loop=0, disposal=2, optimize=False)
+    artifacts.append({"file": motion_path.name, "width": width, "height": height, "frames": Image.open(motion_path).n_frames, "frame_samples": 24, "duration_ms": 9600, "bytes": motion_path.stat().st_size})
+    print(f"{motion_path.relative_to(ROOT)}: {width}x{height}, 24 frames, {motion_path.stat().st_size:,} bytes", flush=True)
     digest = hashlib.sha256()
     for path in sorted((ROOT / "internal/app").glob("*.go")):
         if not path.name.endswith("_test.go"):

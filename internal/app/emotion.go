@@ -9,17 +9,17 @@ func expressionFor(happiness int, alive bool) petExpression {
 	}
 	switch {
 	case happiness >= 80:
-		return petExpression{"^", "u", "^"}
+		return petExpression{"^", "ᴗ", "^"}
 	case happiness >= 60:
-		return petExpression{"o", "w", "^"}
+		return petExpression{"●", "ω", "^"}
 	case happiness >= 40:
-		return petExpression{"o", "-", " "}
+		return petExpression{"●", "-", " "}
 	case happiness >= 20:
 		return petExpression{".", "~", "/"}
 	case happiness > 0:
-		return petExpression{",", "n", "/"}
+		return petExpression{"-", "∩", "/"}
 	default:
-		return petExpression{";", "n", "/"}
+		return petExpression{";", "∩", "/"}
 	}
 }
 

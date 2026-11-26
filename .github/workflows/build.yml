@@ -25,3 +25,4 @@ jobs:
         run: |
           python3 scripts/smoke_test.py bin/ttymagotchi egg nl
           python3 scripts/smoke_test.py bin/ttymagotchi adult en
+          python3 scripts/preview_smoke_test.py bin/ttymagotchi

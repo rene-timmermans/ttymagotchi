@@ -21,6 +21,7 @@ jobs:
           python3 scripts/prepare_release.py
           python3 scripts/smoke_test.py bin/ttymagotchi egg nl
           python3 scripts/smoke_test.py bin/ttymagotchi adult en
+          python3 scripts/preview_smoke_test.py bin/ttymagotchi
           git archive --format=tar.gz --prefix="ttymagotchi-$(cat VERSION)/" --output="dist/ttymagotchi-$(cat VERSION)-source.tar.gz" HEAD
           cp docs/gallery/all-art.png dist/ttymagotchi-all-art.png
       - uses: actions/upload-artifact@v4

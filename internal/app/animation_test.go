@@ -39,11 +39,11 @@ func TestPetBodyAnimatesForEveryStage(t *testing.T) {
 			for frame := 0; frame < 16; frame++ {
 				scene := renderActionSprite(pet, kind, 0, time.Duration(frame)*250*time.Millisecond)
 				lines := strings.Split(scene, "\n")
-				if len(lines) != sceneHeight {
+				if len(lines) != actionSceneSize(pet).height {
 					t.Fatalf("%s %s unstable scene height", stage, kind)
 				}
 				for _, line := range lines {
-					if width := uniseg.StringWidth(line); width != sceneWidth {
+					if width := uniseg.StringWidth(line); width != actionSceneSize(pet).width {
 						t.Fatalf("%s %s frame %d width=%d: %q", stage, kind, frame, width, line)
 					}
 				}
@@ -85,7 +85,7 @@ func TestAnimationVisibleAtTerminalCells(t *testing.T) {
 		second, _, _ := screen.GetContents()
 		changed := false
 		// The sprite lives above the explanatory caption. Check only that region.
-		for y := 4; y <= 13; y++ {
+		for y := 2; y < 20; y++ {
 			for x := 20; x < 60; x++ {
 				i := y*80 + x
 				if first[i] != string(second[i].Runes) {

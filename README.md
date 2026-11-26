@@ -12,7 +12,9 @@ animated care, five species, realistic care timing and five interface languages.
 
 - Five randomly assigned species, each with ten growth forms; all start in the same mystery egg.
 - Random names drawn from the 100 most common Dutch first names.
-- Large animated ASCII pets with blinking, moving ears/tails and expressions that follow Happiness.
+- Individually drawn animal portraits: a cat with curled tail, a dog with muzzle and floppy ears, long-eared rabbits, squat guinea pigs and flippered penguins.
+- Nine separately drawn post-egg ages per species, changing posture, limb proportions, ears and body shape.
+- Calm idle behaviours, blinking, sniffing, ear twitches, tail wags, waddling and occasional tears when unhappy; low Energy adds a short yawn.
 - Eight distinct playable minigames; performance determines rewards.
 - Animated feeding, sleeping, washing, diaper changes and brushing.
 - Health consequences for starvation, overfeeding and poor hygiene; sustained good care restores health.
@@ -30,13 +32,13 @@ Download the matching **x86_64** installer from
 
 ```sh
 # Arch Linux / SteamOS desktop mode (where system package installation is enabled)
-sudo pacman -U ./ttymagotchi-0.3.1-1-x86_64.pkg.tar.zst
+sudo pacman -U ./ttymagotchi-0.3.2-1-x86_64.pkg.tar.zst
 
 # Debian / Ubuntu
-sudo apt install ./ttymagotchi_0.3.1-1_amd64.deb
+sudo apt install ./ttymagotchi_0.3.2-1_amd64.deb
 
 # Fedora
-sudo dnf install ./ttymagotchi-0.3.1-1.x86_64.rpm
+sudo dnf install ./ttymagotchi-0.3.2-1.x86_64.rpm
 ```
 
 Packages install `/usr/bin/ttymagotchi` and an application menu entry that opens a
@@ -50,9 +52,9 @@ continue to install the upstream project.
 This also works without modifying the system, including on Steam Deck:
 
 ```sh
-tar xzf ttymagotchi-0.3.1-linux-amd64.tar.gz
+tar xzf ttymagotchi-0.3.2-linux-amd64.tar.gz
 mkdir -p ~/.local/bin
-install -m755 ttymagotchi-0.3.1/bin/ttymagotchi ~/.local/bin/ttymagotchi
+install -m755 ttymagotchi-0.3.2/bin/ttymagotchi ~/.local/bin/ttymagotchi
 ~/.local/bin/ttymagotchi
 ```
 
@@ -74,6 +76,14 @@ portable executable target Linux x86_64.
 ## Usage
 
 Run `ttymagotchi` in a terminal. `ttymagotchi --version` prints the build version.
+
+To inspect the new characters immediately, run `ttymagotchi --preview`. It starts
+with an adult cat and never loads or changes your saved pet. Keys 1–5 select a
+species, Up/Down select a growth stage, Left/Right change mood, and Tab/Enter
+cycle idle, eating, washing, diaper/brushing, sleeping and refusal animations.
+Space pauses playback, F selects another food, T toggles tiredness to preview yawning,
+C switches compact/detail, Page Up/Down scrolls tall drawings, and Esc/Q exits. In the normal
+game, the species stays hidden during the shared egg stage until day one.
 
 ### Controls
 
@@ -146,8 +156,8 @@ health according to the selected activity.
 | 10 | Adult | 14 |
 
 A mystery egg hides the species until hatching. A new pet randomly becomes a cat,
-dog, rabbit, guinea pig or penguin (Tux). Growth follows elapsed calendar days;
-the speed setting adjusts needs and their health effects. Diaper care ends after
+dog, rabbit, guinea pig or penguin (Tux). Growth follows simulated game days;
+the speed setting controls age, needs and their health effects together. Diaper care ends after
 the Baby stage; Brushing takes its place at Toddler.
 
 ### Food Types
@@ -200,26 +210,39 @@ The old save remains untouched; subsequent saves use the new directory.
 
 In Options, Left/Right or +/- adjusts speed from 0 to 100:
 
-| Speed | Time for Hunger 0 → 100% |
-| --- | --- |
-| 0% | One week |
-| 50% (default) | Eight hours |
-| 100% | Five minutes |
+| Speed | Time for Hunger 0 → 100% | One game day |
+| --- | --- | --- |
+| 0% | One week | Three weeks |
+| 50% (default) | Eight hours | 24 hours |
+| 100% | Five minutes | 15 minutes |
 
 Intermediate settings interpolate geometrically. Other need changes, diaper
-schedules, health damage and recovery scale with this pace. Animation playback
+schedules, age, growth, health damage and recovery scale with this pace. Changing
+speed preserves the age already earned, including partial days. Offline time uses
+the saved speed; older saves retain their existing age. Birth dates remain real
+calendar dates; Time Alive displays simulated lifetime. Animation playback
 duration stays the same. Languages switch immediately and save with your pet.
 
 ## Screenshots
 
-![ASCII art and animation review overview](docs/gallery/overview.png)
+Every species shares the same frame and ground line at each age, from a 24 × 10
+egg to a 58 × 34 adult. Large terminals show detailed portraits with shaped ears,
+muzzles, paws and coats. Smaller terminals use compact drawings for all ages,
+so growing never unexpectedly switches to a smaller display mode. Maximize the
+terminal for more room. The preview always opens detailed portraits, even in a
+small window: use Page Up/Down to scroll, or C to choose compact drawings.
+The status panel still selects a size that fits its available space.
+
+![Five pets and all Happiness expressions](docs/gallery/character-review.png)
+
+[Detailed adult portraits](docs/gallery/adult-portraits.png) · [Growth stages side by side](docs/gallery/growth-review.png) · [Animated behaviour examples](docs/gallery/behaviours.gif) · [Full overview](docs/gallery/overview.png)
 
 [Complete PNG atlas](docs/gallery/all-art.png) · [Cat](docs/gallery/cat.png) ·
 [Dog](docs/gallery/dog.png) · [Rabbit](docs/gallery/rabbit.png) ·
 [Guinea pig](docs/gallery/guinea_pig.png) · [Penguin](docs/gallery/penguin.png)
 
-The full 12,000 × 20,012 pixel atlas contains 1,852 distinct labeled cards covering
-4,550 animation-frame samples. Identical frames are grouped and labeled with their
+The complete atlas contains every distinct exported frame; exact dimensions and
+frame counts are recorded in [the gallery manifest](docs/gallery/manifest.json). Identical frames are grouped and labeled with their
 frame numbers. It includes all 50 growth forms, six living expressions plus death,
 idle and care frames, food icons, minigame screens and refusal choices. The original
 upstream sprites are included in a separately labeled legacy section.
@@ -281,4 +304,5 @@ see [AGENTS.md](AGENTS.md).
 - **Eze Olea Figueroa** for creating [Termagotchi](https://github.com/ezeoleaf/termagotchi), its original game, ASCII art and MIT-licensed foundation.
 - Rene Timmermans for the ttymagotchi fork's direction and expanded care, animation and game design, implemented with Codex assistance.
 - [Nederlandse Voornamenbank / Meertens Instituut](https://nvb.meertens.knaw.nl/downloads/Top_eerste_voornamen_NL_2022.zip) for the 2022 first-name frequency data (male/female totals combined for the 100-name list).
+- Visual direction inspired by [ASCII art style cat by noriko](https://store.line.me/stickershop/product/15658844/en); this fork uses original terminal drawings for all five species.
 - The maintainers of the terminal UI, Unicode and YAML libraries listed above.

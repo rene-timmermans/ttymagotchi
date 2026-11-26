@@ -252,5 +252,7 @@
   "Stop feeding": "Stoppen met voeren",
   "Feed anyway": "Toch voeren",
   "←/→: choose • Enter: confirm • Esc: stop": "←/→: kiezen • Enter: bevestigen • Esc: stoppen",
-  "At hunger 0, No! appears; choose Stop feeding or Feed anyway.": "Bij honger 0 verschijnt Nee!: stop met voeren of voer toch door."
+  "At hunger 0, No! appears; choose Stop feeding or Feed anyway.": "Bij honger 0 verschijnt Nee!: stop met voeren of voer toch door.",
+  "One game day: %s": "Eén speldag: %s",
+  "Changes also affect age, energy, hygiene and neglect damage.": "Wijzigingen beïnvloeden ook leeftijd, energie, hygiëne en schade door verwaarlozing."
 }

@@ -98,7 +98,7 @@ func (a *App) generateStatusList(listStatus *tview.List) {
 		listStatus.AddItem(a.tr("Time Alive: Unknown"), "", 0, nil)
 	} else {
 		listStatus.AddItem(fmt.Sprintf(a.tr("Created: %s"), t.Created.Format("2006-01-02 15:04")), "", 0, nil)
-		listStatus.AddItem(fmt.Sprintf(a.tr("Time Alive: %s"), time.Since(t.Created).Round(time.Second)), "", 0, nil)
+		listStatus.AddItem(fmt.Sprintf(a.tr("Time Alive: %s"), a.ageDuration().Round(time.Second)), "", 0, nil)
 	}
 }
 
@@ -108,6 +108,9 @@ func (a *App) updateSpriteView(view *tview.TextView) {
 		view.SetText("\n  ??\n")
 		return
 	}
+
+	_, _, width, height := view.GetInnerRect()
+	t = petForViewport(t, width, height, 0)
 
 	if knownSpecies(t.Species) && growthIndex(t.Stage) > 0 {
 		view.SetText(strings.Join(animalPose(t, "idle", int(time.Now().UnixMilli()/400)), "\n"))

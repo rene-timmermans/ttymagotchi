@@ -2,3 +2,4 @@
 .DS_*
 bin/
 dist/
+__pycache__/
