@@ -106,4 +106,4 @@ jobs:
           cd downloads
           sha256sum * > SHA256SUMS
           cd ..
-          gh release create "$GITHUB_REF_NAME" downloads/* --verify-tag --title "ttymagotchi $(cat VERSION)" --notes-file "docs/releases/$(cat VERSION).md"
+          gh release create "$GITHUB_REF_NAME" downloads/* --repo "$GITHUB_REPOSITORY" --verify-tag --title "ttymagotchi $(cat VERSION)" --notes-file "docs/releases/$(cat VERSION).md"
